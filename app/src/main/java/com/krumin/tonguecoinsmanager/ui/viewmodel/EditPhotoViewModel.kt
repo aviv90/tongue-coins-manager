@@ -2,19 +2,36 @@ package com.krumin.tonguecoinsmanager.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.krumin.tonguecoinsmanager.R
 import com.krumin.tonguecoinsmanager.domain.model.PhotoMetadata
 import com.krumin.tonguecoinsmanager.domain.repository.PhotoRepository
+import com.krumin.tonguecoinsmanager.util.UiText
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
-import java.util.UUID
 
-sealed class EditUiState {
-    object Idle : EditUiState()
-    object Loading : EditUiState()
-    object Success : EditUiState()
-    data class Error(val message: String) : EditUiState()
+data class EditState(
+    val isLoading: Boolean = false,
+    val photo: PhotoMetadata? = null,
+    val error: UiText? = null,
+    val isSuccess: Boolean = false
+)
+
+sealed interface EditAction {
+    object LoadPhoto : EditAction
+    data class SavePhoto(
+        val title: String,
+        val credit: String,
+        val hint: String,
+        val difficulty: Int,
+        val categories: String,
+        val imageFile: File?
+    ) : EditAction
+
+    object DeletePhoto : EditAction
+    object ClearError : EditAction
 }
 
 class EditPhotoViewModel(
@@ -22,59 +39,89 @@ class EditPhotoViewModel(
     private val photoId: String?
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<EditUiState>(EditUiState.Idle)
-    val uiState = _uiState.asStateFlow()
-
-    private val _currentPhoto = MutableStateFlow<PhotoMetadata?>(null)
-    val currentPhoto = _currentPhoto.asStateFlow()
+    private val _state = MutableStateFlow(EditState())
+    val state = _state.asStateFlow()
 
     init {
         if (photoId != null) {
-            loadPhoto(photoId)
+            handleAction(EditAction.LoadPhoto)
         }
     }
 
-    private fun loadPhoto(id: String) {
+    fun handleAction(action: EditAction) {
+        when (action) {
+            is EditAction.LoadPhoto -> loadPhoto()
+            is EditAction.SavePhoto -> save(action)
+            is EditAction.DeletePhoto -> delete()
+            is EditAction.ClearError -> _state.update { it.copy(error = null) }
+        }
+    }
+
+    private fun loadPhoto() {
+        val id = photoId ?: return
         viewModelScope.launch {
+            _state.update { it.copy(isLoading = true, error = null) }
             try {
                 val photos = repository.getPhotos()
-                _currentPhoto.value = photos.find { it.id == id }
+                val photo = photos.find { it.id == id }
+                _state.update { it.copy(isLoading = false, photo = photo) }
             } catch (e: Exception) {
-                _uiState.value = EditUiState.Error("Failed to load photo")
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        error = UiText.StringResource(R.string.error_loading_photo)
+                    )
+                }
             }
         }
     }
 
-    fun savePhoto(
-        title: String,
-        credit: String,
-        hint: String,
-        difficulty: Int,
-        categories: String,
-        imageFile: File?
-    ) {
+    private fun save(action: EditAction.SavePhoto) {
         viewModelScope.launch {
-            _uiState.value = EditUiState.Loading
+            _state.update { it.copy(isLoading = true, error = null) }
             try {
                 val metadata = PhotoMetadata(
-                    id = _currentPhoto.value?.id ?: UUID.randomUUID().toString(),
-                    imageUrl = _currentPhoto.value?.imageUrl ?: "", // Will be updated by repository if needed
-                    title = title,
-                    credit = credit,
-                    hint = hint,
-                    difficulty = difficulty,
-                    categories = categories,
-                    version = (_currentPhoto.value?.version ?: 0) + 1
+                    id = photoId ?: "",
+                    imageUrl = _state.value.photo?.imageUrl ?: "",
+                    title = action.title,
+                    credit = action.credit,
+                    hint = action.hint,
+                    difficulty = action.difficulty,
+                    categories = action.categories,
+                    version = _state.value.photo?.version ?: 1
                 )
 
-                if (imageFile != null) {
-                    repository.uploadPhoto(imageFile, metadata)
+                if (action.imageFile != null) {
+                    repository.uploadPhoto(action.imageFile, metadata)
                 } else {
                     repository.updateMetadata(metadata)
                 }
-                _uiState.value = EditUiState.Success
+                _state.update { it.copy(isLoading = false, isSuccess = true) }
             } catch (e: Exception) {
-                _uiState.value = EditUiState.Error(e.message ?: "Failed to save")
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        error = UiText.StringResource(R.string.error_saving)
+                    )
+                }
+            }
+        }
+    }
+
+    private fun delete() {
+        val id = photoId ?: return
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true, error = null) }
+            try {
+                repository.deletePhoto(id)
+                _state.update { it.copy(isLoading = false, isSuccess = true) }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        error = UiText.StringResource(R.string.error_deleting)
+                    )
+                }
             }
         }
     }

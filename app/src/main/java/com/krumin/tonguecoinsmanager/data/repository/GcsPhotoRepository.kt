@@ -10,74 +10,89 @@ import com.krumin.tonguecoinsmanager.domain.model.PhotoMetadata
 import com.krumin.tonguecoinsmanager.domain.repository.PhotoRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import java.io.File
 
 class GcsPhotoRepository(
     private val context: Context,
     private val bucketName: String,
-    private val jsonFileName: String = "content.json"
+    private val jsonFileName: String = DEFAULT_JSON_FILE,
+    private val keyFileName: String = DEFAULT_KEY_FILE
 ) : PhotoRepository {
 
     private val storage: Storage by lazy {
-        // NOTE: In a real app, you would load credentials from a secure place.
-        // For development, we might use a service account key in assets or raw.
-        // This is a placeholder for the actual authentication logic.
         try {
-            val serviceAccountStream = context.assets.open("gcp-key.json")
+            val serviceAccountStream = context.assets.open(keyFileName)
             val credentials = GoogleCredentials.fromStream(serviceAccountStream)
             StorageOptions.newBuilder().setCredentials(credentials).build().service
         } catch (e: Exception) {
-            // Fallback to default credentials if not found
             StorageOptions.getDefaultInstance().service
         }
     }
 
-    private val json = Json { 
-        ignoreUnknownKeys = true 
+    private val json = Json {
+        ignoreUnknownKeys = true
         prettyPrint = true
     }
 
     override suspend fun getPhotos(): List<PhotoMetadata> = withContext(Dispatchers.IO) {
         val blob = storage.get(BlobId.of(bucketName, jsonFileName))
-        if (blob == null || blob.getSize() == 0L) return@withContext emptyList()
-        
+        if (blob == null || blob.size == 0L) return@withContext emptyList()
+
         val content = String(blob.getContent())
         json.decodeFromString<List<PhotoMetadata>>(content)
     }
 
-    override suspend fun uploadPhoto(imageFile: File, metadata: PhotoMetadata) = withContext(Dispatchers.IO) {
-        // 1. Upload image
-        val blobId = BlobId.of(bucketName, "${metadata.id}.jpeg")
-        val blobInfo = BlobInfo.newBuilder(blobId).setContentType("image/jpeg").build()
-        storage.create(blobInfo, imageFile.readBytes())
-
-        // 2. Update JSON
-        val currentPhotos = getPhotos().toMutableList()
-        val index = currentPhotos.indexOfFirst { it.id == metadata.id }
-        if (index != -1) {
-            currentPhotos[index] = metadata
-        } else {
-            currentPhotos.add(metadata)
-        }
-        savePhotosJson(currentPhotos)
+    private fun generateNextId(currentPhotos: List<PhotoMetadata>): String {
+        val maxId = currentPhotos
+            .mapNotNull { it.id.removePrefix(ID_PREFIX).toIntOrNull() }
+            .maxOrNull() ?: 0
+        return "$ID_PREFIX${maxId + 1}"
     }
+
+    override suspend fun uploadPhoto(imageFile: File, metadata: PhotoMetadata) =
+        withContext(Dispatchers.IO) {
+            val currentPhotos = getPhotos().toMutableList()
+            val isNew = currentPhotos.none { it.id == metadata.id } || metadata.id.isEmpty()
+
+            val finalId = if (isNew) generateNextId(currentPhotos) else metadata.id
+            val finalImageUrl = "$GCS_BASE_URL/$bucketName/$finalId$IMAGE_EXT"
+            val finalVersion = if (isNew) 1 else metadata.version + 1
+
+            val finalMetadata = metadata.copy(
+                id = finalId,
+                imageUrl = finalImageUrl,
+                version = finalVersion
+            )
+
+            // 1. Upload image
+            val blobId = BlobId.of(bucketName, "$finalId$IMAGE_EXT")
+            val blobInfo = BlobInfo.newBuilder(blobId).setContentType(CONTENT_TYPE_JPEG).build()
+            storage.create(blobInfo, imageFile.readBytes())
+
+            // 2. Update JSON
+            val index = currentPhotos.indexOfFirst { it.id == finalId }
+            if (index != -1) {
+                currentPhotos[index] = finalMetadata
+            } else {
+                currentPhotos.add(finalMetadata)
+            }
+            savePhotosJson(currentPhotos)
+        }
 
     override suspend fun updateMetadata(metadata: PhotoMetadata) = withContext(Dispatchers.IO) {
         val currentPhotos = getPhotos().toMutableList()
         val index = currentPhotos.indexOfFirst { it.id == metadata.id }
         if (index != -1) {
-            currentPhotos[index] = metadata
+            val updatedMetadata = metadata.copy(version = metadata.version + 1)
+            currentPhotos[index] = updatedMetadata
             savePhotosJson(currentPhotos)
         }
     }
 
     override suspend fun deletePhoto(id: String) = withContext(Dispatchers.IO) {
-        // 1. Delete image
-        storage.delete(BlobId.of(bucketName, "$id.jpeg"))
-
-        // 2. Update JSON
+        storage.delete(BlobId.of(bucketName, "$id$IMAGE_EXT"))
         val currentPhotos = getPhotos().toMutableList()
         currentPhotos.removeAll { it.id == id }
         savePhotosJson(currentPhotos)
@@ -86,7 +101,17 @@ class GcsPhotoRepository(
     private fun savePhotosJson(photos: List<PhotoMetadata>) {
         val jsonContent = json.encodeToString(photos)
         val blobId = BlobId.of(bucketName, jsonFileName)
-        val blobInfo = BlobInfo.newBuilder(blobId).setContentType("application/json").build()
+        val blobInfo = BlobInfo.newBuilder(blobId).setContentType(CONTENT_TYPE_JSON).build()
         storage.create(blobInfo, jsonContent.toByteArray())
+    }
+
+    companion object {
+        private const val DEFAULT_JSON_FILE = "content.json"
+        private const val DEFAULT_KEY_FILE = "gcp-key.json"
+        private const val GCS_BASE_URL = "https://storage.googleapis.com"
+        private const val ID_PREFIX = "img"
+        private const val IMAGE_EXT = ".jpeg"
+        private const val CONTENT_TYPE_JPEG = "image/jpeg"
+        private const val CONTENT_TYPE_JSON = "application/json"
     }
 }

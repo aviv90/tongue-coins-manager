@@ -1,6 +1,5 @@
 package com.krumin.tonguecoinsmanager.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -12,32 +11,36 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = GoldPrimary,
+    secondary = GoldSecondary,
+    tertiary = GoldTertiary,
+    background = DarkBackground,
+    surface = DarkSurface,
+    onPrimary = GoldDark,
+    onSecondary = GoldLight,
+    onTertiary = GoldLight,
+    onBackground = GoldLight,
+    onSurface = GoldLight
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    primary = GoldSecondary,
+    secondary = GoldTertiary,
+    tertiary = GoldPrimary,
+    background = GoldLight,
+    surface = androidx.compose.ui.graphics.Color.White,
+    onPrimary = androidx.compose.ui.graphics.Color.White,
+    onSecondary = androidx.compose.ui.graphics.Color.White,
+    onTertiary = GoldDark,
+    onBackground = GoldDark,
+    onSurface = GoldDark
 )
 
 @Composable
 fun TongueCoinsManagerTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    // Set to false for a consistent golden brand look
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

@@ -1,7 +1,6 @@
 package com.krumin.tonguecoinsmanager.domain.repository
 
 import com.krumin.tonguecoinsmanager.domain.model.PhotoMetadata
-import kotlinx.coroutines.flow.Flow
 import java.io.File
 
 interface PhotoRepository {

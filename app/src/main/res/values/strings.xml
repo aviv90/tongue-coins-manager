@@ -1,3 +1,40 @@
 <resources>
     <string name="app_name">Tongue Coins Manager</string>
+    <string name="app_title_main">ניהול מטבעות לשון</string>
+    <string name="search_placeholder">חיפוש…</string>
+    <string name="search_content_description">חיפוש</string>
+    <string name="search_close_content_description">סגור חיפוש</string>
+    <string name="refresh_content_description">רענן</string>
+    <string name="add_photo_content_description">הוסף תמונה</string>
+    <string name="no_photos_found">לא נמצאו תמונות</string>
+    <string name="no_photos_match_search">לא נמצאו תמונות התואמות לחיפוש</string>
+    <string name="try_again">נסה שוב</string>
+    <string name="difficulty_label">רמה: %1$d</string>
+
+    <string name="save_changes_title">שמירת שינויים</string>
+    <string name="save_changes_confirmation">האם אתה בטוח שברצונך לשמור את השינויים?</string>
+    <string name="save_button">שמור</string>
+    <string name="cancel_button">ביטול</string>
+
+    <string name="delete_photo_title">מחיקת תמונה</string>
+    <string name="delete_photo_confirmation">האם אתה בטוח שברצונך למחוק תמונה זו? פעולה זו אינה ניתנת לביטול.</string>
+    <string name="delete_button">מחק</string>
+    <string name="delete_photo_action">מחק תמונה</string>
+
+    <string name="add_photo_title">הוספת תמונה</string>
+    <string name="edit_photo_title">עריכת תמונה</string>
+    <string name="back_content_description">חזרה</string>
+    <string name="select_photo">בחר תמונה</string>
+    <string name="change_photo">החלף תמונה</string>
+
+    <string name="field_title_label">ביטוי (הפתרון)</string>
+    <string name="field_credit_label">קרדיט (שם צלם/יוצר)</string>
+    <string name="field_hint_label">רמז</string>
+    <string name="field_difficulty_label">דרגת קושי (1-10)</string>
+    <string name="field_categories_label">קטגוריות (מופרדות בפסיק)</string>
+
+    <string name="error_loading_photos">טעינת התמונות נכשלה</string>
+    <string name="error_loading_photo">טעינת התמונה נכשלה</string>
+    <string name="error_saving">שגיאה בשמירה</string>
+    <string name="error_deleting">מחיקת התמונה נכשלה</string>
 </resources>

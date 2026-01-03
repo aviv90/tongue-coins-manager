@@ -14,6 +14,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.krumin.tonguecoinsmanager.ui.navigation.Screen
 import com.krumin.tonguecoinsmanager.ui.screens.EditPhotoScreen
 import com.krumin.tonguecoinsmanager.ui.screens.PhotoListScreen
 import com.krumin.tonguecoinsmanager.ui.theme.TongueCoinsManagerTheme
@@ -38,22 +39,22 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun TongueCoinsApp() {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = "list") {
-        composable("list") {
+    NavHost(navController = navController, startDestination = Screen.List.route) {
+        composable(Screen.List.route) {
             PhotoListScreen(
-                onAddPhoto = { navController.navigate("edit") },
-                onEditPhoto = { id -> navController.navigate("edit?id=$id") }
+                onAddPhoto = { navController.navigate(Screen.Edit.createRoute(null)) },
+                onEditPhoto = { id -> navController.navigate(Screen.Edit.createRoute(id)) }
             )
         }
         composable(
-            "edit?id={id}",
-            arguments = listOf(navArgument("id") { 
+            route = Screen.Edit.route,
+            arguments = listOf(navArgument(Screen.ARG_ID) {
                 type = NavType.StringType
                 nullable = true
-                defaultValue = null 
+                defaultValue = null
             })
         ) { backStackEntry ->
-            val id = backStackEntry.arguments?.getString("id")
+            val id = backStackEntry.arguments?.getString(Screen.ARG_ID)
             EditPhotoScreen(
                 photoId = id,
                 onBack = { navController.popBackStack() }

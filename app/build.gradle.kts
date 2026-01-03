@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.krumin.tonguecoinsmanager"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.krumin.tonguecoinsmanager"
@@ -38,6 +38,21 @@ android {
     buildFeatures {
         compose = true
     }
+
+    packaging {
+        resources {
+            excludes += "/META-INF/INDEX.LIST"
+            excludes += "/META-INF/DEPENDENCIES"
+            excludes += "/META-INF/LICENSE"
+            excludes += "/META-INF/LICENSE.txt"
+            excludes += "/META-INF/license.txt"
+            excludes += "/META-INF/NOTICE"
+            excludes += "/META-INF/NOTICE.txt"
+            excludes += "/META-INF/notice.txt"
+            excludes += "/META-INF/ASL2.0"
+            excludes += "META-INF/gradle/incremental.annotation.processors"
+        }
+    }
 }
 
 dependencies {
@@ -49,6 +64,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons.extended)
 
     // Koin
     implementation(libs.koin.android)
@@ -58,13 +74,13 @@ dependencies {
     implementation(libs.coil.compose)
 
     // Navigation
-    implementation(libs.androidx.navigation-compose)
+    implementation(libs.androidx.navigation.compose)
 
     // Serialization
-    implementation(libs.kotlinx-serialization-json)
+    implementation(libs.kotlinx.serialization.json)
 
     // GCS
-    implementation(libs.google-cloud-storage) {
+    implementation(libs.google.cloud.storage) {
         exclude(group = "org.apache.httpcomponents", module = "httpclient")
     }
     testImplementation(libs.junit)
