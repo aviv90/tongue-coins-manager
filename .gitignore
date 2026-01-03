@@ -1,0 +1,30 @@
+*.iml
+.gradle
+/local.properties
+/.idea/
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# GCS Service Account Key
+app/src/main/assets/gcp-key.json
+
+# Android Studio / IntelliJ IDEA
+*.ipr
+*.iws
+out/
+.idea/
+
+# Gradle
+.gradle/
+build/
+
+# Kotlin
+/build/
+
+# OS specific files
+Thumb.db
+desktop.ini
