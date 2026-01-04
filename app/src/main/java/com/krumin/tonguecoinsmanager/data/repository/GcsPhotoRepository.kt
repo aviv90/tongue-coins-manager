@@ -38,6 +38,7 @@ class GcsPhotoRepository(
     private val json = Json {
         ignoreUnknownKeys = true
         prettyPrint = true
+        encodeDefaults = true
     }
 
     override suspend fun getPhotos(): List<PhotoMetadata> = withContext(Dispatchers.IO) {
@@ -61,14 +62,30 @@ class GcsPhotoRepository(
             val isNew = currentPhotos.none { it.id == metadata.id } || metadata.id.isEmpty()
 
             val finalId = if (isNew) generateNextId(currentPhotos) else metadata.id
-            val finalVersion = if (isNew) 1 else metadata.version + 1
+            val existingIndex = currentPhotos.indexOfFirst { it.id == finalId }
+            val existing = if (existingIndex != -1) currentPhotos[existingIndex] else null
+            val finalVersion = if (isNew) 1 else (existing?.version ?: 0) + 1
             val finalImageUrl = "$GCS_BASE_URL/$bucketName/$finalId$IMAGE_EXT?v=$finalVersion"
 
-            val finalMetadata = metadata.copy(
-                id = finalId,
-                imageUrl = finalImageUrl,
-                version = finalVersion
-            )
+            // For updates: merge with existing data to preserve all fields
+            val finalMetadata = if (existing != null) {
+                existing.copy(
+                    id = finalId,
+                    imageUrl = finalImageUrl,
+                    title = metadata.title,
+                    credit = metadata.credit,
+                    hint = metadata.hint,
+                    difficulty = metadata.difficulty,
+                    categories = metadata.categories,
+                    version = finalVersion
+                )
+            } else {
+                metadata.copy(
+                    id = finalId,
+                    imageUrl = finalImageUrl,
+                    version = finalVersion
+                )
+            }
 
             // 1. Upload image
             val blobId = BlobId.of(bucketName, "$finalId$IMAGE_EXT")
@@ -76,9 +93,8 @@ class GcsPhotoRepository(
             storage.create(blobInfo, imageFile.readBytes())
 
             // 2. Update JSON
-            val index = currentPhotos.indexOfFirst { it.id == finalId }
-            if (index != -1) {
-                currentPhotos[index] = finalMetadata
+            if (existingIndex != -1) {
+                currentPhotos[existingIndex] = finalMetadata
             } else {
                 currentPhotos.add(finalMetadata)
             }
@@ -89,7 +105,17 @@ class GcsPhotoRepository(
         val currentPhotos = getPhotos().toMutableList()
         val index = currentPhotos.indexOfFirst { it.id == metadata.id }
         if (index != -1) {
-            val updatedMetadata = metadata.copy(version = metadata.version + 1)
+            val existing = currentPhotos[index]
+            // Merge: Use incoming values but preserve any fields that might be missing
+            val updatedMetadata = existing.copy(
+                title = metadata.title,
+                credit = metadata.credit,
+                hint = metadata.hint,
+                difficulty = metadata.difficulty,
+                categories = metadata.categories,
+                imageUrl = "${existing.imageUrl.substringBefore("?v=")}?v=${existing.version + 1}",
+                version = existing.version + 1
+            )
             currentPhotos[index] = updatedMetadata
             savePhotosJson(currentPhotos)
         }
