@@ -20,7 +20,8 @@ import java.io.File
 
 class GcsPhotoRepository(
     private val context: Context,
-    private val bucketName: String,
+    private val privateBucketName: String,
+    private val publicBucketName: String,
     private val jsonFileName: String = DEFAULT_JSON_FILE,
     private val keyFileName: String = DEFAULT_KEY_FILE
 ) : PhotoRepository {
@@ -42,7 +43,7 @@ class GcsPhotoRepository(
     }
 
     override suspend fun getPhotos(): List<PhotoMetadata> = withContext(Dispatchers.IO) {
-        val blob = storage.get(BlobId.of(bucketName, jsonFileName))
+        val blob = storage.get(BlobId.of(privateBucketName, jsonFileName))
         if (blob == null || blob.size == 0L) return@withContext emptyList()
 
         val content = String(blob.getContent())
@@ -65,7 +66,7 @@ class GcsPhotoRepository(
             val existingIndex = currentPhotos.indexOfFirst { it.id == finalId }
             val existing = if (existingIndex != -1) currentPhotos[existingIndex] else null
             val finalVersion = if (isNew) 1 else (existing?.version ?: 0) + 1
-            val finalImageUrl = "$GCS_BASE_URL/$bucketName/$finalId$IMAGE_EXT?v=$finalVersion"
+            val finalImageUrl = "$GCS_BASE_URL/$publicBucketName/$finalId$IMAGE_EXT?v=$finalVersion"
 
             // For updates: merge with existing data to preserve all fields
             val finalMetadata = if (existing != null) {
@@ -88,7 +89,7 @@ class GcsPhotoRepository(
             }
 
             // 1. Upload image
-            val blobId = BlobId.of(bucketName, "$finalId$IMAGE_EXT")
+            val blobId = BlobId.of(publicBucketName, "$finalId$IMAGE_EXT")
             val blobInfo = BlobInfo.newBuilder(blobId).setContentType(CONTENT_TYPE_JPEG).build()
             storage.create(blobInfo, imageFile.readBytes())
 
@@ -122,14 +123,14 @@ class GcsPhotoRepository(
     }
 
     override suspend fun deletePhoto(id: String) = withContext(Dispatchers.IO) {
-        storage.delete(BlobId.of(bucketName, "$id$IMAGE_EXT"))
+        storage.delete(BlobId.of(publicBucketName, "$id$IMAGE_EXT"))
         val currentPhotos = getPhotos().toMutableList()
         currentPhotos.removeAll { it.id == id }
         savePhotosJson(currentPhotos)
     }
 
     override suspend fun downloadPhoto(photo: PhotoMetadata): Unit = withContext(Dispatchers.IO) {
-        val blob = storage.get(BlobId.of(bucketName, "${photo.id}$IMAGE_EXT"))
+        val blob = storage.get(BlobId.of(publicBucketName, "${photo.id}$IMAGE_EXT"))
         if (blob == null) return@withContext
 
         val bytes = blob.getContent()
@@ -165,7 +166,7 @@ class GcsPhotoRepository(
 
     private fun savePhotosJson(photos: List<PhotoMetadata>) {
         val jsonContent = json.encodeToString(photos)
-        val blobId = BlobId.of(bucketName, jsonFileName)
+        val blobId = BlobId.of(privateBucketName, jsonFileName)
         val blobInfo = BlobInfo.newBuilder(blobId).setContentType(CONTENT_TYPE_JSON).build()
         storage.create(blobInfo, jsonContent.toByteArray())
     }

@@ -16,7 +16,8 @@ val appModule = module {
     single<PhotoRepository> {
         GcsPhotoRepository(
             context = androidContext(),
-            bucketName = "tonguecoins"
+            privateBucketName = "tonguecoins-private",
+            publicBucketName = "tonguecoins"
         )
     }
 
