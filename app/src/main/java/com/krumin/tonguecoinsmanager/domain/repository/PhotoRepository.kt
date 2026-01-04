@@ -8,4 +8,5 @@ interface PhotoRepository {
     suspend fun uploadPhoto(imageFile: File, metadata: PhotoMetadata)
     suspend fun updateMetadata(metadata: PhotoMetadata)
     suspend fun deletePhoto(id: String)
+    suspend fun downloadPhoto(photo: PhotoMetadata)
 }

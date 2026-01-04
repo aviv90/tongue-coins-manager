@@ -1,6 +1,10 @@
 package com.krumin.tonguecoinsmanager.data.repository
 
+import android.content.ContentValues
 import android.content.Context
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.cloud.storage.BlobId
 import com.google.cloud.storage.BlobInfo
@@ -57,8 +61,8 @@ class GcsPhotoRepository(
             val isNew = currentPhotos.none { it.id == metadata.id } || metadata.id.isEmpty()
 
             val finalId = if (isNew) generateNextId(currentPhotos) else metadata.id
-            val finalImageUrl = "$GCS_BASE_URL/$bucketName/$finalId$IMAGE_EXT"
             val finalVersion = if (isNew) 1 else metadata.version + 1
+            val finalImageUrl = "$GCS_BASE_URL/$bucketName/$finalId$IMAGE_EXT?v=$finalVersion"
 
             val finalMetadata = metadata.copy(
                 id = finalId,
@@ -96,6 +100,41 @@ class GcsPhotoRepository(
         val currentPhotos = getPhotos().toMutableList()
         currentPhotos.removeAll { it.id == id }
         savePhotosJson(currentPhotos)
+    }
+
+    override suspend fun downloadPhoto(photo: PhotoMetadata): Unit = withContext(Dispatchers.IO) {
+        val blob = storage.get(BlobId.of(bucketName, "${photo.id}$IMAGE_EXT"))
+        if (blob == null) return@withContext
+
+        val bytes = blob.getContent()
+        val displayName = "${photo.title.replace(" ", "_")}_${photo.id}$IMAGE_EXT"
+
+        val contentValues = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
+            put(MediaStore.MediaColumns.MIME_TYPE, CONTENT_TYPE_JPEG)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                put(
+                    MediaStore.MediaColumns.RELATIVE_PATH,
+                    Environment.DIRECTORY_PICTURES + "/TongueCoins"
+                )
+                put(MediaStore.MediaColumns.IS_PENDING, 1)
+            }
+        }
+
+        val resolver = context.contentResolver
+        val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+
+        uri?.let {
+            resolver.openOutputStream(it)?.use { outputStream ->
+                outputStream.write(bytes)
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                contentValues.clear()
+                contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0)
+                resolver.update(it, contentValues, null, null)
+            }
+        }
     }
 
     private fun savePhotosJson(photos: List<PhotoMetadata>) {

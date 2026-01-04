@@ -43,7 +43,8 @@ fun TongueCoinsApp() {
         composable(Screen.List.route) {
             PhotoListScreen(
                 onAddPhoto = { navController.navigate(Screen.Edit.createRoute(null)) },
-                onEditPhoto = { id -> navController.navigate(Screen.Edit.createRoute(id)) }
+                onEditPhoto = { id -> navController.navigate(Screen.Edit.createRoute(id)) },
+                navController = navController
             )
         }
         composable(
@@ -57,7 +58,13 @@ fun TongueCoinsApp() {
             val id = backStackEntry.arguments?.getString(Screen.ARG_ID)
             EditPhotoScreen(
                 photoId = id,
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onResult = { result ->
+                    navController.previousBackStackEntry?.savedStateHandle?.set(
+                        Screen.RESULT_KEY,
+                        result
+                    )
+                }
             )
         }
     }

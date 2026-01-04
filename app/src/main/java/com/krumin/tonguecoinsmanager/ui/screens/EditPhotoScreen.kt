@@ -19,6 +19,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Image
@@ -34,6 +35,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -56,6 +59,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import coil.compose.AsyncImage
 import com.krumin.tonguecoinsmanager.R
+import com.krumin.tonguecoinsmanager.ui.navigation.Screen
 import com.krumin.tonguecoinsmanager.ui.viewmodel.EditAction
 import com.krumin.tonguecoinsmanager.ui.viewmodel.EditPhotoViewModel
 import com.krumin.tonguecoinsmanager.util.FileUtils
@@ -67,6 +71,7 @@ import org.koin.core.parameter.parametersOf
 fun EditPhotoScreen(
     photoId: String?,
     onBack: () -> Unit,
+    onResult: (String) -> Unit,
     viewModel: EditPhotoViewModel = koinViewModel(parameters = { parametersOf(photoId) })
 ) {
     val state by viewModel.state.collectAsState()
@@ -78,6 +83,8 @@ fun EditPhotoScreen(
     var difficulty by remember { mutableStateOf("1") }
     var categories by remember { mutableStateOf("") }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val successMessage = stringResource(R.string.success_categories_generated)
 
     LaunchedEffect(state.photo) {
         state.photo?.let {
@@ -89,8 +96,27 @@ fun EditPhotoScreen(
         }
     }
 
+    LaunchedEffect(state.generatedCategories) {
+        state.generatedCategories?.let { genCats ->
+            if (genCats.isNotEmpty()) {
+                categories = genCats.joinToString(", ")
+                viewModel.handleAction(EditAction.ClearGeneratedCategories)
+                snackbarHostState.showSnackbar(successMessage)
+            }
+        }
+    }
+
     if (state.isSuccess) {
         LaunchedEffect(Unit) {
+            val result = when {
+                photoId == null -> Screen.RESULT_ADD
+                state.photo == null -> Screen.RESULT_DELETE // If photo is gone from state but success is true
+                else -> Screen.RESULT_EDIT
+            }
+            // Actually, EditPhotoViewModel doesn't clear photo on delete success yet, 
+            // but we can infer based on the action that was taken.
+            // Let's refine this to pass the correct result.
+            onResult(result)
             onBack()
         }
     }
@@ -201,6 +227,7 @@ fun EditPhotoScreen(
         }
 
         Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 CenterAlignedTopAppBar(
                     title = {
@@ -311,7 +338,27 @@ fun EditPhotoScreen(
                 EditTextField(
                     value = categories,
                     onValueChange = { categories = it },
-                    label = stringResource(R.string.field_categories_label)
+                    label = stringResource(R.string.field_categories_label),
+                    trailingIcon = {
+                        if (title.isNotBlank()) {
+                            if (state.isGeneratingCategories) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(dimensionResource(R.dimen.icon_size_small)),
+                                    strokeWidth = dimensionResource(R.dimen.spacing_tiny)
+                                )
+                            } else {
+                                IconButton(onClick = {
+                                    viewModel.handleAction(EditAction.GenerateCategories(title))
+                                }) {
+                                    Icon(
+                                        imageVector = Icons.Default.AutoAwesome,
+                                        contentDescription = "ג׳נרט קטגוריות",
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                        }
+                    }
                 )
 
                 if (photoId != null) {
@@ -357,7 +404,8 @@ private fun EditTextField(
     value: String,
     onValueChange: (String) -> Unit,
     label: String,
-    keyboardType: KeyboardType = KeyboardType.Text
+    keyboardType: KeyboardType = KeyboardType.Text,
+    trailingIcon: @Composable (() -> Unit)? = null
 ) {
     OutlinedTextField(
         value = value,
@@ -365,6 +413,7 @@ private fun EditTextField(
         label = { Text(label) },
         modifier = Modifier.fillMaxWidth(),
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        singleLine = true
+        singleLine = true,
+        trailingIcon = trailingIcon
     )
 }

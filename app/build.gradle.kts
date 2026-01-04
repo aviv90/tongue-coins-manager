@@ -79,6 +79,9 @@ dependencies {
     // Serialization
     implementation(libs.kotlinx.serialization.json)
 
+    // Gemini
+    implementation(libs.google.generativeai)
+
     // GCS
     implementation(libs.google.cloud.storage) {
         exclude(group = "org.apache.httpcomponents", module = "httpclient")

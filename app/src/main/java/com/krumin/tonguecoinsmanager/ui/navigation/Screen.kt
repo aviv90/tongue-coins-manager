@@ -8,5 +8,9 @@ sealed class Screen(val route: String) {
 
     companion object {
         const val ARG_ID = "id"
+        const val RESULT_KEY = "action_result"
+        const val RESULT_ADD = "added"
+        const val RESULT_EDIT = "edited"
+        const val RESULT_DELETE = "deleted"
     }
 }

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.krumin.tonguecoinsmanager.R
 import com.krumin.tonguecoinsmanager.domain.model.PhotoMetadata
 import com.krumin.tonguecoinsmanager.domain.repository.PhotoRepository
+import com.krumin.tonguecoinsmanager.domain.service.CategoryGenerator
 import com.krumin.tonguecoinsmanager.util.UiText
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,9 +15,11 @@ import java.io.File
 
 data class EditState(
     val isLoading: Boolean = false,
+    val isGeneratingCategories: Boolean = false,
     val photo: PhotoMetadata? = null,
     val error: UiText? = null,
-    val isSuccess: Boolean = false
+    val isSuccess: Boolean = false,
+    val generatedCategories: List<String>? = null
 )
 
 sealed interface EditAction {
@@ -30,12 +33,15 @@ sealed interface EditAction {
         val imageFile: File?
     ) : EditAction
 
-    object DeletePhoto : EditAction
+    data class GenerateCategories(val title: String) : EditAction
+    object ClearGeneratedCategories : EditAction
     object ClearError : EditAction
+    object DeletePhoto : EditAction
 }
 
 class EditPhotoViewModel(
     private val repository: PhotoRepository,
+    private val categoryGenerator: CategoryGenerator,
     private val photoId: String?
 ) : ViewModel() {
 
@@ -53,7 +59,44 @@ class EditPhotoViewModel(
             is EditAction.LoadPhoto -> loadPhoto()
             is EditAction.SavePhoto -> save(action)
             is EditAction.DeletePhoto -> delete()
+            is EditAction.GenerateCategories -> generateCategories(action.title)
+            is EditAction.ClearGeneratedCategories -> _state.update { it.copy(generatedCategories = null) }
             is EditAction.ClearError -> _state.update { it.copy(error = null) }
+        }
+    }
+
+    private fun generateCategories(title: String) {
+        if (title.isBlank()) return
+        viewModelScope.launch {
+            _state.update {
+                it.copy(
+                    isGeneratingCategories = true,
+                    error = null,
+                    generatedCategories = null
+                )
+            }
+            try {
+                val contextPhotos = repository.getPhotos()
+                    .filter { it.id != photoId && it.title != title }
+                val categories = categoryGenerator.generateCategories(title, contextPhotos)
+                if (categories.isEmpty()) {
+                    _state.update {
+                        it.copy(
+                            isGeneratingCategories = false,
+                            error = UiText.StringResource(R.string.error_ai_generation)
+                        )
+                    }
+                } else {
+                    _state.update {
+                        it.copy(
+                            isGeneratingCategories = false,
+                            generatedCategories = categories
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                _state.update { it.copy(isGeneratingCategories = false) }
+            }
         }
     }
 

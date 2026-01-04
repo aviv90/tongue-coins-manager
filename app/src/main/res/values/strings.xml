@@ -37,4 +37,11 @@
     <string name="error_loading_photo">טעינת התמונה נכשלה</string>
     <string name="error_saving">שגיאה בשמירה</string>
     <string name="error_deleting">מחיקת התמונה נכשלה</string>
+    <string name="success_add">התמונה נוספה בהצלחה</string>
+    <string name="success_edit">השינויים נשמרו בהצלחה</string>
+    <string name="success_delete">התמונה נמחקה בהצלחה</string>
+    <string name="error_ai_generation">נכשלנו ביצירת קטגוריות. נסה שוב או בדוק את המפתח.</string>
+    <string name="success_categories_generated">הקטגוריות עודכנו בהצלחה</string>
+    <string name="success_download">התמונה הורדה בהצלחה לגלריה</string>
+    <string name="error_download">נכשלנו בהורדת התמונה. נסה שוב מאוחר יותר.</string>
 </resources>

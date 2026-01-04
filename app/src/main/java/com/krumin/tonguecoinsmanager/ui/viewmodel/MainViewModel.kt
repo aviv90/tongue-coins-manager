@@ -16,13 +16,18 @@ data class MainState(
     val photos: List<PhotoMetadata> = emptyList(),
     val filteredPhotos: List<PhotoMetadata> = emptyList(),
     val searchQuery: String = "",
-    val error: UiText? = null
+    val error: UiText? = null,
+    val isDownloading: Boolean = false,
+    val downloadingPhotoId: String? = null,
+    val downloadSuccess: UiText? = null
 )
 
 sealed interface MainAction {
     object LoadPhotos : MainAction
     data class SearchQueryChanged(val query: String) : MainAction
     object ClearError : MainAction
+    data class DownloadPhoto(val photo: PhotoMetadata) : MainAction
+    object ClearDownloadStatus : MainAction
 }
 
 class MainViewModel(
@@ -43,6 +48,8 @@ class MainViewModel(
             is MainAction.LoadPhotos -> loadPhotos()
             is MainAction.SearchQueryChanged -> updateSearchQuery(action.query)
             is MainAction.ClearError -> _state.update { it.copy(error = null) }
+            is MainAction.DownloadPhoto -> downloadPhoto(action.photo)
+            is MainAction.ClearDownloadStatus -> _state.update { it.copy(downloadSuccess = null) }
         }
     }
 
@@ -79,5 +86,36 @@ class MainViewModel(
             }
         }
         _state.update { it.copy(isLoading = false, filteredPhotos = filtered, photos = photos) }
+    }
+
+    private fun downloadPhoto(photo: PhotoMetadata) {
+        viewModelScope.launch {
+            _state.update {
+                it.copy(
+                    isDownloading = true,
+                    downloadingPhotoId = photo.id,
+                    error = null,
+                    downloadSuccess = null
+                )
+            }
+            try {
+                repository.downloadPhoto(photo)
+                _state.update {
+                    it.copy(
+                        isDownloading = false,
+                        downloadingPhotoId = null,
+                        downloadSuccess = UiText.StringResource(R.string.success_download)
+                    )
+                }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        isDownloading = false,
+                        downloadingPhotoId = null,
+                        error = UiText.StringResource(R.string.error_download)
+                    )
+                }
+            }
+        }
     }
 }
