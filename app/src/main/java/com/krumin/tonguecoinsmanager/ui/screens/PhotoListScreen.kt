@@ -1,5 +1,6 @@
 package com.krumin.tonguecoinsmanager.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -126,6 +127,11 @@ fun PhotoListScreen(
                 viewModel.handleAction(MainAction.ClearError)
             }
         }
+    }
+
+    BackHandler(enabled = isSearchActive) {
+        isSearchActive = false
+        viewModel.handleAction(MainAction.SearchQueryChanged(""))
     }
 
     LaunchedEffect(isSearchActive) {
