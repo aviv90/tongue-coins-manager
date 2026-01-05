@@ -11,5 +11,6 @@ data class PhotoMetadata(
     val hint: String = "",
     val difficulty: Int = 1,
     val categories: String = "",
-    val version: Int = 1
+    val version: Int = 1,
+    val aspectRatio: Float = 1.0f
 )

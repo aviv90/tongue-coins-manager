@@ -2,6 +2,7 @@ package com.krumin.tonguecoinsmanager.data.repository
 
 import android.content.ContentValues
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
@@ -68,6 +69,12 @@ class GcsPhotoRepository(
             val finalVersion = if (isNew) 1 else (existing?.version ?: 0) + 1
             val finalImageUrl = "$GCS_BASE_URL/$publicBucketName/$finalId$IMAGE_EXT?v=$finalVersion"
 
+            // Calculate aspect ratio
+            val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeFile(imageFile.absolutePath, options)
+            val aspectRatio =
+                if (options.outHeight > 0) options.outWidth.toFloat() / options.outHeight else 1.0f
+
             // For updates: merge with existing data to preserve all fields
             val finalMetadata = if (existing != null) {
                 existing.copy(
@@ -78,13 +85,15 @@ class GcsPhotoRepository(
                     hint = metadata.hint,
                     difficulty = metadata.difficulty,
                     categories = metadata.categories,
-                    version = finalVersion
+                    version = finalVersion,
+                    aspectRatio = aspectRatio
                 )
             } else {
                 metadata.copy(
                     id = finalId,
                     imageUrl = finalImageUrl,
-                    version = finalVersion
+                    version = finalVersion,
+                    aspectRatio = aspectRatio
                 )
             }
 
