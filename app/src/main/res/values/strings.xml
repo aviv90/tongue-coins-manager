@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Tongue Coins Manager</string>
     <string name="app_title_main">ניהול מטבעות לשון</string>
@@ -44,4 +45,18 @@
     <string name="success_categories_generated">הקטגוריות עודכנו בהצלחה</string>
     <string name="success_download">התמונה הורדה בהצלחה לגלריה</string>
     <string name="error_download">נכשלנו בהורדת התמונה. נסה שוב מאוחר יותר.</string>
+    <string name="ai_edit_label">עריכה חכמה (Nano Banana Pro)</string>
+    <string name="ai_edit_prompt_placeholder">תאר מה תרצה לשנות בתמונה…</string>
+    <string name="ai_edit_button">ערוך עם AI</string>
+    <string name="ai_editing">ה-AI עובד על התמונה שלך…</string>
+    <string name="ai_review_title">תוצאת העריכה</string>
+    <string name="ai_review_replace">החלף תמונה</string>
+    <string name="ai_review_discard">בטל</string>
+    <string name="success_ai_edit">התמונה עודכנה בהצלחה על ידי ה-AI</string>
+    <string name="error_ai_edit">נכשלנו בעריכת התמונה. נסה פרומפט אחר.</string>
+    <string name="close_preview">סגור תצוגה</string>
+    <string name="download_photo_content_description">הורד תמונה</string>
+    <string name="generate_categories_content_description">ג׳נרט קטגוריות</string>
+    <string name="ai_error_no_image">המערכת לא החזירה תמונה ערוכה. נסה פרומפט אחר.</string>
+    <string name="ai_error_serialization">שגיאת סריליזציה. ייתכן שהפרומפט סונן.</string>
 </resources>

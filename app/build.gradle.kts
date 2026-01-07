@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.google.services)
     alias(libs.plugins.secrets)
 }
 
@@ -32,9 +33,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
-    }
-    kotlinOptions {
-        jvmTarget = "11"
     }
     buildFeatures {
         compose = true
@@ -82,7 +80,9 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     // Gemini
-    implementation(libs.google.generativeai)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.ai)
+
 
     // GCS
     implementation(libs.google.cloud.storage) {
@@ -95,4 +95,9 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+}
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+    }
 }

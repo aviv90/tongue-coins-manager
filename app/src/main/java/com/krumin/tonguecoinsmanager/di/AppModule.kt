@@ -16,14 +16,21 @@ val appModule = module {
     single<PhotoRepository> {
         GcsPhotoRepository(
             context = androidContext(),
-            privateBucketName = "tonguecoins-private",
-            publicBucketName = "tonguecoins"
+            privateBucketName = com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.PRIVATE_BUCKET,
+            publicBucketName = com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.PUBLIC_BUCKET
         )
     }
 
     // Gemini
     single<CategoryGenerator> {
-        GeminiCategoryGenerator(apiKey = BuildConfig.GEMINI_API_KEY)
+        GeminiCategoryGenerator(androidContext(), BuildConfig.GEMINI_API_KEY)
+    }
+
+    single<com.krumin.tonguecoinsmanager.domain.service.ImageEditor> {
+        com.krumin.tonguecoinsmanager.data.service.GeminiImageEditor(
+            androidContext(),
+            BuildConfig.GEMINI_API_KEY
+        )
     }
 
     // ViewModels
@@ -32,7 +39,8 @@ val appModule = module {
         EditPhotoViewModel(
             repository = get(),
             categoryGenerator = get(),
-            photoId = parameters.getOrNull()
+            imageEditor = get(),
+            photoId = parameters.getOrNull<String>()
         )
     }
 }

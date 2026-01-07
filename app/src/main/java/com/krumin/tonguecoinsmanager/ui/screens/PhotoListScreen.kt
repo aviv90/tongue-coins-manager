@@ -64,7 +64,6 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
@@ -237,7 +236,7 @@ fun PhotoListScreen(
                 if (state.isLoading && state.photos.isEmpty()) {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 } else {
-                    Column {
+                    Column(modifier = Modifier.fillMaxSize()) {
                         if (state.isLoading) {
                             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                         }
@@ -250,7 +249,9 @@ fun PhotoListScreen(
                                 ) {
                                     Text(
                                         text = state.error?.asString() ?: "",
-                                        color = MaterialTheme.colorScheme.error
+                                        color = MaterialTheme.colorScheme.error,
+                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth()
                                     )
                                     Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_medium)))
                                     Button(onClick = { viewModel.handleAction(MainAction.LoadPhotos) }) {
@@ -265,8 +266,12 @@ fun PhotoListScreen(
                                         } else {
                                             stringResource(R.string.no_photos_match_search)
                                         },
-                                        modifier = Modifier.align(Alignment.Center),
-                                        style = MaterialTheme.typography.bodyLarge
+                                        modifier = Modifier
+                                            .align(Alignment.Center)
+                                            .fillMaxWidth()
+                                            .padding(horizontal = dimensionResource(R.dimen.spacing_large)),
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                     )
                                 } else {
                                     LazyVerticalGrid(
@@ -361,7 +366,7 @@ fun PhotoCard(
                         start = dimensionResource(R.dimen.spacing_medium),
                         top = dimensionResource(R.dimen.spacing_medium),
                         bottom = dimensionResource(R.dimen.spacing_medium),
-                        end = 2.dp // Precisely 2dp from the left edge
+                        end = dimensionResource(R.dimen.spacing_tiny_horizontal)
                     ),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -371,7 +376,8 @@ fun PhotoCard(
                         text = photo.title,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        maxLines = 1
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                     Text(
                         text = stringResource(R.string.difficulty_label, photo.difficulty),
@@ -382,18 +388,18 @@ fun PhotoCard(
                 IconButton(
                     onClick = onDownload,
                     enabled = !isDownloading,
-                    modifier = Modifier.size(40.dp) // Explicit smaller size
+                    modifier = Modifier.size(dimensionResource(R.dimen.download_button_size))
                 ) {
                     if (isDownloading) {
                         CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            strokeWidth = 2.dp,
+                            modifier = Modifier.size(dimensionResource(R.dimen.progress_size_small)),
+                            strokeWidth = dimensionResource(R.dimen.stroke_small),
                             color = MaterialTheme.colorScheme.primary
                         )
                     } else {
                         Icon(
                             imageVector = Icons.Default.FileDownload,
-                            contentDescription = "Download Photo",
+                            contentDescription = stringResource(R.string.download_photo_content_description),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }

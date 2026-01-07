@@ -1,19 +1,20 @@
 [versions]
 agp = "8.13.2"
-kotlin = "2.0.21"
+kotlin = "2.3.0"
 coreKtx = "1.17.0"
 junit = "4.13.2"
 junitVersion = "1.3.0"
 espressoCore = "3.7.0"
-lifecycleRuntimeKtx = "2.6.1"
+lifecycleRuntimeKtx = "2.10.0"
 activityCompose = "1.12.2"
-composeBom = "2024.09.00"
-koin = "4.0.0"
+composeBom = "2025.12.01"
+koin = "4.1.1"
 coil = "2.7.0"
-navigation = "2.8.5"
-serialization = "1.7.3"
-gcs = "2.44.1"
-gemini = "0.9.0"
+navigation = "2.9.6"
+serialization = "1.9.0"
+gcs = "2.61.0"
+firebaseBom = "34.7.0"
+googleServices = "4.4.4"
 secrets = "2.0.1"
 
 [libraries]
@@ -38,12 +39,14 @@ coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coi
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serialization" }
 google-cloud-storage = { group = "com.google.cloud", name = "google-cloud-storage", version.ref = "gcs" }
-google-generativeai = { group = "com.google.ai.client.generativeai", name = "generativeai", version.ref = "gemini" }
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
+firebase-ai = { group = "com.google.firebase", name = "firebase-ai" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
 secrets = { id = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin", version.ref = "secrets" }
 

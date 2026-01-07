@@ -6,20 +6,26 @@ import com.krumin.tonguecoinsmanager.R
 import com.krumin.tonguecoinsmanager.domain.model.PhotoMetadata
 import com.krumin.tonguecoinsmanager.domain.repository.PhotoRepository
 import com.krumin.tonguecoinsmanager.domain.service.CategoryGenerator
+import com.krumin.tonguecoinsmanager.domain.service.ImageEditor
 import com.krumin.tonguecoinsmanager.util.UiText
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 
 data class EditState(
     val isLoading: Boolean = false,
     val isGeneratingCategories: Boolean = false,
+    val isEditingImage: Boolean = false,
     val photo: PhotoMetadata? = null,
     val error: UiText? = null,
     val isSuccess: Boolean = false,
-    val generatedCategories: List<String>? = null
+    val generatedCategories: List<String>? = null,
+    val pendingAiImage: File? = null, // Waiting for user approval
+    val confirmedAiImage: File? = null // User approved this image
 )
 
 sealed interface EditAction {
@@ -33,15 +39,20 @@ sealed interface EditAction {
         val imageFile: File?
     ) : EditAction
 
+    data class EditImage(val prompt: String) : EditAction
     data class GenerateCategories(val title: String) : EditAction
     object ClearGeneratedCategories : EditAction
     object ClearError : EditAction
+    object ConfirmAiImage : EditAction
+    object DiscardAiImage : EditAction
+    object ClearConfirmedAiImage : EditAction
     object DeletePhoto : EditAction
 }
 
 class EditPhotoViewModel(
     private val repository: PhotoRepository,
     private val categoryGenerator: CategoryGenerator,
+    private val imageEditor: ImageEditor,
     private val photoId: String?
 ) : ViewModel() {
 
@@ -59,9 +70,58 @@ class EditPhotoViewModel(
             is EditAction.LoadPhoto -> loadPhoto()
             is EditAction.SavePhoto -> save(action)
             is EditAction.DeletePhoto -> delete()
+            is EditAction.EditImage -> editImage(action.prompt)
             is EditAction.GenerateCategories -> generateCategories(action.title)
             is EditAction.ClearGeneratedCategories -> _state.update { it.copy(generatedCategories = null) }
             is EditAction.ClearError -> _state.update { it.copy(error = null) }
+            is EditAction.ConfirmAiImage -> _state.update {
+                it.copy(
+                    confirmedAiImage = it.pendingAiImage,
+                    pendingAiImage = null
+                )
+            }
+
+            is EditAction.DiscardAiImage -> _state.update { it.copy(pendingAiImage = null) }
+            is EditAction.ClearConfirmedAiImage -> _state.update { it.copy(confirmedAiImage = null) }
+        }
+    }
+
+    private fun editImage(prompt: String) {
+        if (prompt.isBlank()) return
+        val currentPhoto = _state.value.photo ?: return
+
+        viewModelScope.launch {
+            _state.update { it.copy(isEditingImage = true, error = null) }
+            try {
+                // Download current image to bytes
+                val photoUrl = currentPhoto.imageUrl
+                val response = withContext(Dispatchers.IO) {
+                    java.net.URL(photoUrl).readBytes()
+                }
+
+                val editedBytes = imageEditor.editImage(response, prompt)
+
+                // Save to temp file
+                val tempFile = File.createTempFile(
+                    com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.TEMP_PREFIX_AI,
+                    com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.EXTENSION_JPG
+                )
+                tempFile.writeBytes(editedBytes)
+
+                _state.update {
+                    it.copy(
+                        isEditingImage = false,
+                        pendingAiImage = tempFile // Set as pending for review
+                    )
+                }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        isEditingImage = false,
+                        error = UiText.StringResource(R.string.error_ai_edit)
+                    )
+                }
+            }
         }
     }
 
@@ -134,8 +194,11 @@ class EditPhotoViewModel(
                     version = _state.value.photo?.version ?: 1
                 )
 
-                if (action.imageFile != null) {
-                    repository.uploadPhoto(action.imageFile, metadata)
+                // Priority: Confirmed AI image > User selected image > Existing image
+                val imageToUpload = _state.value.confirmedAiImage ?: action.imageFile
+
+                if (imageToUpload != null) {
+                    repository.uploadPhoto(imageToUpload, metadata)
                 } else {
                     repository.updateMetadata(metadata)
                 }

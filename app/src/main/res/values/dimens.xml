@@ -16,6 +16,11 @@
 
     <!-- Misc -->
     <dimen name="surface_elevation">4.dp</dimen>
+    <dimen name="elevation_large">8.dp</dimen>
     <dimen name="badge_padding_horizontal">6.dp</dimen>
     <dimen name="badge_radius">4.dp</dimen>
+    <dimen name="download_button_size">40.dp</dimen>
+    <dimen name="progress_size_small">24.dp</dimen>
+    <dimen name="stroke_small">2.dp</dimen>
+    <dimen name="spacing_tiny_horizontal">2.dp</dimen>
 </resources>

@@ -3,10 +3,12 @@ package com.krumin.tonguecoinsmanager.ui.screens
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -99,7 +101,8 @@ fun EditPhotoScreen(
     LaunchedEffect(state.generatedCategories) {
         state.generatedCategories?.let { genCats ->
             if (genCats.isNotEmpty()) {
-                categories = genCats.joinToString(", ")
+                categories =
+                    genCats.joinToString(com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.SEPARATOR_COMMA)
                 viewModel.handleAction(EditAction.ClearGeneratedCategories)
                 snackbarHostState.showSnackbar(successMessage)
             }
@@ -125,12 +128,151 @@ fun EditPhotoScreen(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         selectedImageUri = uri
+        if (uri != null) {
+            viewModel.handleAction(EditAction.ClearConfirmedAiImage)
+        }
+    }
+
+    // Checking for pending AI image to show review dialog
+    if (state.pendingAiImage != null) {
+        val pendingImage = state.pendingAiImage
+        androidx.compose.ui.window.Dialog(
+            onDismissRequest = { viewModel.handleAction(EditAction.DiscardAiImage) },
+            properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            androidx.compose.material3.Surface(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(dimensionResource(R.dimen.spacing_large)),
+                shape = MaterialTheme.shapes.large,
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = dimensionResource(R.dimen.elevation_large)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(dimensionResource(R.dimen.spacing_large)),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = stringResource(R.string.ai_review_title),
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(vertical = dimensionResource(R.dimen.spacing_large))
+                            .fillMaxWidth()
+                    ) {
+                        AsyncImage(
+                            model = pendingImage,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(dimensionResource(R.dimen.spacing_small)),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_medium))
+                    ) {
+                        OutlinedButton(
+                            onClick = { viewModel.handleAction(EditAction.DiscardAiImage) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(dimensionResource(R.dimen.button_height_large))
+                        ) {
+                            Text(stringResource(R.string.ai_review_discard))
+                        }
+
+                        Button(
+                            onClick = { viewModel.handleAction(EditAction.ConfirmAiImage) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(dimensionResource(R.dimen.button_height_large)),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Icon(Icons.Default.Check, contentDescription = null)
+                            Spacer(Modifier.width(dimensionResource(R.dimen.spacing_small)))
+                            Text(stringResource(R.string.ai_review_replace))
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(state.confirmedAiImage) {
+        if (state.confirmedAiImage != null) {
+            selectedImageUri = null
+        }
     }
 
     var showSaveDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showFullScreenImage by remember { mutableStateOf(false) }
 
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+        if (showFullScreenImage) {
+            val imageSource = state.confirmedAiImage ?: selectedImageUri ?: state.photo?.imageUrl
+            if (imageSource != null) {
+                androidx.compose.ui.window.Dialog(
+                    onDismissRequest = { showFullScreenImage = false },
+                    properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
+                ) {
+                    androidx.compose.material3.Surface(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(dimensionResource(R.dimen.spacing_large)),
+                        shape = MaterialTheme.shapes.large,
+                        color = MaterialTheme.colorScheme.surface,
+                        tonalElevation = dimensionResource(R.dimen.elevation_large)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(dimensionResource(R.dimen.spacing_large)),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Box(modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth()) {
+                                AsyncImage(
+                                    model = imageSource,
+                                    contentDescription = null,
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Fit
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_large)))
+
+                            Button(
+                                onClick = { showFullScreenImage = false },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(dimensionResource(R.dimen.button_height_large)),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary
+                                )
+                            ) {
+                                Text(stringResource(R.string.close_preview))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         if (showSaveDialog) {
             AlertDialog(
                 onDismissRequest = { showSaveDialog = false },
@@ -284,16 +426,19 @@ fun EditPhotoScreen(
                         .padding(dimensionResource(R.dimen.spacing_medium)),
                     contentAlignment = Alignment.Center
                 ) {
-                    val imageSource = selectedImageUri ?: state.photo?.imageUrl
+                    val imageSource =
+                        state.confirmedAiImage ?: selectedImageUri ?: state.photo?.imageUrl
                     if (imageSource != null) {
                         AsyncImage(
                             model = imageSource,
                             contentDescription = null,
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clickable { showFullScreenImage = true },
                             contentScale = ContentScale.Fit
                         )
                     } else {
-                        OutlinedButton(onClick = { launcher.launch("image/*") }) {
+                        OutlinedButton(onClick = { launcher.launch(com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.MIME_TYPE_IMAGE) }) {
                             Icon(imageVector = Icons.Default.Image, contentDescription = null)
                             Spacer(Modifier.width(dimensionResource(R.dimen.spacing_medium)))
                             Text(stringResource(R.string.select_photo))
@@ -303,10 +448,98 @@ fun EditPhotoScreen(
 
                 if (selectedImageUri != null || state.photo?.imageUrl != null) {
                     TextButton(
-                        onClick = { launcher.launch("image/*") },
+                        onClick = { launcher.launch(com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.MIME_TYPE_IMAGE) },
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     ) {
                         Text(stringResource(R.string.change_photo))
+                    }
+                }
+
+                if (photoId != null) {
+                    // AI Editing Section
+                    androidx.compose.material3.Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.large,
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        border = androidx.compose.foundation.BorderStroke(
+                            dimensionResource(R.dimen.spacing_tiny) / 2, // 1.dp
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(dimensionResource(R.dimen.spacing_large)),
+                            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_medium))
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_medium))
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.AutoAwesome,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    text = stringResource(R.string.ai_edit_label),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+
+                            var aiPrompt by remember { mutableStateOf("") }
+
+                            OutlinedTextField(
+                                value = aiPrompt,
+                                onValueChange = { aiPrompt = it },
+                                placeholder = { Text(stringResource(R.string.ai_edit_prompt_placeholder)) },
+                                modifier = Modifier.fillMaxWidth(),
+                                minLines = 2,
+                                maxLines = 4,
+                                shape = MaterialTheme.shapes.medium
+                            )
+
+                            Button(
+                                onClick = {
+                                    viewModel.handleAction(EditAction.EditImage(aiPrompt))
+                                },
+                                enabled = aiPrompt.isNotBlank() && !state.isEditingImage,
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = MaterialTheme.shapes.medium,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary
+                                )
+                            ) {
+                                if (state.isEditingImage) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(
+                                            dimensionResource(R.dimen.spacing_medium)
+                                        )
+                                    ) {
+                                        Text(stringResource(R.string.ai_editing))
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(
+                                                dimensionResource(R.dimen.spacing_large) + dimensionResource(
+                                                    R.dimen.spacing_small
+                                                )
+                                            ), // ~20.dp
+                                            strokeWidth = dimensionResource(R.dimen.spacing_tiny), // 2.dp
+                                            color = MaterialTheme.colorScheme.onPrimary
+                                        )
+                                    }
+                                } else {
+                                    @Suppress("IMPLICIT_CAST_TO_ANY")
+                                    Text(stringResource(R.string.ai_edit_button))
+                                    Spacer(modifier = Modifier.width(dimensionResource(R.dimen.spacing_medium)))
+                                    Icon(
+                                        imageVector = Icons.Default.AutoAwesome,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(dimensionResource(R.dimen.icon_size_small))
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -352,7 +585,7 @@ fun EditPhotoScreen(
                                 }) {
                                     Icon(
                                         imageVector = Icons.Default.AutoAwesome,
-                                        contentDescription = "ג׳נרט קטגוריות",
+                                        contentDescription = stringResource(R.string.generate_categories_content_description),
                                         tint = MaterialTheme.colorScheme.primary
                                     )
                                 }

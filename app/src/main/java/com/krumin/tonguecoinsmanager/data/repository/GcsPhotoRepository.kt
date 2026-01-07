@@ -15,7 +15,6 @@ import com.krumin.tonguecoinsmanager.domain.model.PhotoMetadata
 import com.krumin.tonguecoinsmanager.domain.repository.PhotoRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
 
@@ -151,7 +150,7 @@ class GcsPhotoRepository(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 put(
                     MediaStore.MediaColumns.RELATIVE_PATH,
-                    Environment.DIRECTORY_PICTURES + "/TongueCoins"
+                    Environment.DIRECTORY_PICTURES + com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.DOWNLOAD_FOLDER
                 )
                 put(MediaStore.MediaColumns.IS_PENDING, 1)
             }
@@ -181,12 +180,19 @@ class GcsPhotoRepository(
     }
 
     companion object {
-        private const val DEFAULT_JSON_FILE = "content.json"
-        private const val DEFAULT_KEY_FILE = "gcp-key.json"
-        private const val GCS_BASE_URL = "https://storage.googleapis.com"
-        private const val ID_PREFIX = "img"
-        private const val IMAGE_EXT = ".jpeg"
-        private const val CONTENT_TYPE_JPEG = "image/jpeg"
-        private const val CONTENT_TYPE_JSON = "application/json"
+        private const val DEFAULT_JSON_FILE =
+            com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.DEFAULT_JSON_FILE
+        private const val DEFAULT_KEY_FILE =
+            com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.DEFAULT_KEY_FILE
+        private const val GCS_BASE_URL =
+            com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.BASE_URL
+        private const val ID_PREFIX =
+            com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.ID_PREFIX
+        private const val IMAGE_EXT =
+            com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.IMAGE_EXT
+        private const val CONTENT_TYPE_JPEG =
+            com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.CONTENT_TYPE_JPEG
+        private const val CONTENT_TYPE_JSON =
+            com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.CONTENT_TYPE_JSON
     }
 }
