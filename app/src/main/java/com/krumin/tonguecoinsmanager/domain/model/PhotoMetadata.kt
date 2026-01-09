@@ -13,4 +13,11 @@ data class PhotoMetadata(
     val categories: String = "",
     val version: Int = 1,
     val aspectRatio: Float = 1.0f
-)
+) {
+    fun trimmed(): PhotoMetadata = copy(
+        title = title.trim(),
+        credit = credit.trim(),
+        hint = hint.trim(),
+        categories = categories.trim()
+    )
+}

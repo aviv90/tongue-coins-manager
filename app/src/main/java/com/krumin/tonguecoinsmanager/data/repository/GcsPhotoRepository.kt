@@ -103,9 +103,9 @@ class GcsPhotoRepository(
 
             // 2. Update JSON
             if (existingIndex != -1) {
-                currentPhotos[existingIndex] = finalMetadata
+                currentPhotos[existingIndex] = finalMetadata.trimmed()
             } else {
-                currentPhotos.add(finalMetadata)
+                currentPhotos.add(finalMetadata.trimmed())
             }
             savePhotosJson(currentPhotos)
         }
@@ -125,7 +125,7 @@ class GcsPhotoRepository(
                 imageUrl = "${existing.imageUrl.substringBefore("?v=")}?v=${existing.version + 1}",
                 version = existing.version + 1
             )
-            currentPhotos[index] = updatedMetadata
+            currentPhotos[index] = updatedMetadata.trimmed()
             savePhotosJson(currentPhotos)
         }
     }

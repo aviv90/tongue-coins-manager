@@ -243,9 +243,11 @@ fun EditPhotoScreen(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Box(modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth()) {
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxWidth()
+                            ) {
                                 AsyncImage(
                                     model = imageSource,
                                     contentDescription = null,

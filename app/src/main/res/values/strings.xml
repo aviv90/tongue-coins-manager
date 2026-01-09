@@ -52,7 +52,6 @@
     <string name="ai_review_title">תוצאת העריכה</string>
     <string name="ai_review_replace">החלף תמונה</string>
     <string name="ai_review_discard">בטל</string>
-    <string name="success_ai_edit">התמונה עודכנה בהצלחה על ידי ה-AI</string>
     <string name="error_ai_edit">נכשלנו בעריכת התמונה. נסה פרומפט אחר.</string>
     <string name="close_preview">סגור תצוגה</string>
     <string name="download_photo_content_description">הורד תמונה</string>
