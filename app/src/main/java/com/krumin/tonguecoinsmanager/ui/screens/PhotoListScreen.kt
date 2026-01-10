@@ -1,6 +1,12 @@
 package com.krumin.tonguecoinsmanager.ui.screens
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,6 +17,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -19,8 +26,11 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
@@ -36,6 +46,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -43,6 +55,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -69,6 +82,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.krumin.tonguecoinsmanager.R
+import com.krumin.tonguecoinsmanager.domain.model.PendingChange
 import com.krumin.tonguecoinsmanager.domain.model.PhotoMetadata
 import com.krumin.tonguecoinsmanager.ui.navigation.Screen
 import com.krumin.tonguecoinsmanager.ui.viewmodel.MainAction
@@ -140,7 +154,7 @@ fun PhotoListScreen(
     }
 
     val lifecycleOwner = LocalLifecycleOwner.current
-    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
+    DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 viewModel.handleAction(MainAction.LoadPhotos)
@@ -226,6 +240,20 @@ fun PhotoListScreen(
                         contentDescription = stringResource(R.string.add_photo_content_description)
                     )
                 }
+            },
+            bottomBar = {
+                // Batch Action Bar
+                AnimatedVisibility(
+                    visible = state.pendingChanges.isNotEmpty() && !state.isCommitting,
+                    enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+                    exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
+                ) {
+                    BatchActionBar(
+                        count = state.pendingChanges.size,
+                        onCommit = { viewModel.handleAction(MainAction.CommitChanges) },
+                        onDiscard = { viewModel.handleAction(MainAction.DiscardChanges) }
+                    )
+                }
             }
         ) { padding ->
             Box(
@@ -301,7 +329,8 @@ fun PhotoListScreen(
                                                         )
                                                     )
                                                 },
-                                                isDownloading = state.downloadingPhotoId == photo.id
+                                                isDownloading = state.downloadingPhotoId == photo.id,
+                                                pendingChange = state.pendingChanges.find { it.id == photo.id }
                                             )
                                         }
                                     }
@@ -309,6 +338,91 @@ fun PhotoListScreen(
                             }
                         }
                     }
+                }
+
+                // Commit Loading Overlay
+                AnimatedVisibility(
+                    visible = state.isCommitting,
+                    enter = fadeIn(),
+                    exit = fadeOut()
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.6f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_medium)))
+                            Text(
+                                text = stringResource(R.string.batch_saving_progress),
+                                color = Color.White,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        }
+                    }
+                }
+
+
+            }
+        }
+    }
+}
+
+@Composable
+fun BatchActionBar(
+    count: Int,
+    onCommit: () -> Unit,
+    onDiscard: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .padding(dimensionResource(R.dimen.spacing_large))
+            .navigationBarsPadding()
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(dimensionResource(R.dimen.card_radius_large)),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f),
+        tonalElevation = dimensionResource(R.dimen.surface_elevation_high),
+        border = androidx.compose.foundation.BorderStroke(
+            dimensionResource(R.dimen.stroke_thin),
+            MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(dimensionResource(R.dimen.spacing_medium))
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(
+                    text = stringResource(R.string.batch_pending_changes, count),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Row(horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))) {
+                IconButton(onClick = onDiscard) {
+                    Icon(
+                        imageVector = Icons.Default.History,
+                        contentDescription = stringResource(R.string.batch_discard),
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
+                Button(
+                    onClick = onCommit,
+                    shape = RoundedCornerShape(dimensionResource(R.dimen.card_radius_medium))
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = null,
+                        modifier = Modifier.size(dimensionResource(R.dimen.icon_size_small))
+                    )
+                    Spacer(modifier = Modifier.size(dimensionResource(R.dimen.spacing_small)))
+                    Text(stringResource(R.string.batch_commit))
                 }
             }
         }
@@ -320,7 +434,8 @@ fun PhotoCard(
     photo: PhotoMetadata,
     onClick: () -> Unit,
     onDownload: () -> Unit,
-    isDownloading: Boolean
+    isDownloading: Boolean,
+    pendingChange: PendingChange?
 ) {
     ElevatedCard(
         modifier = Modifier
@@ -355,6 +470,37 @@ fun PhotoCard(
                         ),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+
+                if (pendingChange != null) {
+                    SuggestionChip(
+                        onClick = { },
+                        label = {
+                            Text(
+                                text = stringResource(R.string.pending_badge),
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = when (pendingChange) {
+                                    is PendingChange.Add -> Icons.Default.Add
+                                    is PendingChange.Edit -> Icons.Default.Check
+                                    is PendingChange.Delete -> Icons.Default.Delete
+                                },
+                                contentDescription = null,
+                                modifier = Modifier.size(dimensionResource(R.dimen.icon_size_tiny))
+                            )
+                        },
+                        modifier = Modifier
+                            .padding(dimensionResource(R.dimen.spacing_medium))
+                            .align(Alignment.BottomStart),
+                        colors = SuggestionChipDefaults.suggestionChipColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.9f)
+                        ),
+                        border = null,
+                        shape = RoundedCornerShape(dimensionResource(R.dimen.badge_radius))
                     )
                 }
             }

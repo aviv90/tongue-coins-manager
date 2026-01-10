@@ -58,4 +58,11 @@
     <string name="generate_categories_content_description">ג׳נרט קטגוריות</string>
     <string name="ai_error_no_image">המערכת לא החזירה תמונה ערוכה. נסה פרומפט אחר.</string>
     <string name="ai_error_serialization">שגיאת סריליזציה. ייתכן שהפרומפט סונן.</string>
+    <string name="batch_pending_changes">%1$d שינויים ממתינים…</string>
+    <string name="batch_commit">בצע עכשיו</string>
+    <string name="batch_discard">בטל הכל</string>
+    <string name="batch_saving_progress">שומר שינויים…</string>
+    <string name="pending_badge">טיוטה</string>
+    <string name="error_field_required">שדה זה הוא חובה</string>
+    <string name="error_image_required">חובה לבחור תמונה</string>
 </resources>

@@ -9,6 +9,7 @@ import com.krumin.tonguecoinsmanager.domain.service.CategoryGenerator
 import com.krumin.tonguecoinsmanager.domain.service.ImageEditor
 import com.krumin.tonguecoinsmanager.util.UiText
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -25,7 +26,8 @@ data class EditState(
     val isSuccess: Boolean = false,
     val generatedCategories: List<String>? = null,
     val pendingAiImage: File? = null, // Waiting for user approval
-    val confirmedAiImage: File? = null // User approved this image
+    val confirmedAiImage: File? = null, // User approved this image
+    val validationErrors: Map<String, Int> = emptyMap() // Field name to error string resource ID
 )
 
 sealed interface EditAction {
@@ -59,6 +61,9 @@ class EditPhotoViewModel(
     private val _state = MutableStateFlow(EditState())
     val state = _state.asStateFlow()
 
+    private var editJob: Job? = null
+    private var categoryJob: Job? = null
+
     init {
         if (photoId != null) {
             handleAction(EditAction.LoadPhoto)
@@ -90,7 +95,8 @@ class EditPhotoViewModel(
         if (prompt.isBlank()) return
         val currentPhoto = _state.value.photo ?: return
 
-        viewModelScope.launch {
+        editJob?.cancel()
+        editJob = viewModelScope.launch {
             _state.update { it.copy(isEditingImage = true, error = null) }
             try {
                 // Download current image to bytes
@@ -115,6 +121,7 @@ class EditPhotoViewModel(
                     )
                 }
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 _state.update {
                     it.copy(
                         isEditingImage = false,
@@ -127,7 +134,8 @@ class EditPhotoViewModel(
 
     private fun generateCategories(title: String) {
         if (title.isBlank()) return
-        viewModelScope.launch {
+        categoryJob?.cancel()
+        categoryJob = viewModelScope.launch {
             _state.update {
                 it.copy(
                     isGeneratingCategories = true,
@@ -155,6 +163,7 @@ class EditPhotoViewModel(
                     }
                 }
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 _state.update { it.copy(isGeneratingCategories = false) }
             }
         }
@@ -180,8 +189,24 @@ class EditPhotoViewModel(
     }
 
     private fun save(action: EditAction.SavePhoto) {
+        val errors = mutableMapOf<String, Int>()
+        if (action.title.isBlank()) errors["title"] = R.string.error_field_required
+        if (action.categories.isBlank()) errors["categories"] = R.string.error_field_required
+        if (action.difficulty < 1 || action.difficulty > 10) errors["difficulty"] =
+            R.string.error_field_required
+
+        // Image check: Confirmed AI > Selected > Existing
+        val hasImage =
+            _state.value.confirmedAiImage != null || action.imageFile != null || _state.value.photo?.imageUrl?.isNotBlank() == true
+        if (!hasImage) errors["image"] = R.string.error_image_required
+
+        if (errors.isNotEmpty()) {
+            _state.update { it.copy(validationErrors = errors) }
+            return
+        }
+
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, error = null) }
+            _state.update { it.copy(isLoading = true, error = null, validationErrors = emptyMap()) }
             try {
                 val metadata = PhotoMetadata(
                     id = photoId ?: "",
@@ -198,9 +223,9 @@ class EditPhotoViewModel(
                 val imageToUpload = _state.value.confirmedAiImage ?: action.imageFile
 
                 if (imageToUpload != null) {
-                    repository.uploadPhoto(imageToUpload, metadata)
+                    repository.uploadPhoto(imageToUpload, metadata, commit = false)
                 } else {
-                    repository.updateMetadata(metadata)
+                    repository.updateMetadata(metadata, commit = false)
                 }
                 _state.update { it.copy(isLoading = false, isSuccess = true) }
             } catch (e: Exception) {
@@ -219,7 +244,7 @@ class EditPhotoViewModel(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             try {
-                repository.deletePhoto(id)
+                repository.deletePhoto(id, commit = false)
                 _state.update { it.copy(isLoading = false, isSuccess = true) }
             } catch (e: Exception) {
                 _state.update {

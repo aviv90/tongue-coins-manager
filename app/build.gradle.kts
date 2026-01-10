@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.google.services)
     alias(libs.plugins.secrets)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -88,6 +89,12 @@ dependencies {
     implementation(libs.google.cloud.storage) {
         exclude(group = "org.apache.httpcomponents", module = "httpclient")
     }
+
+    // Room
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

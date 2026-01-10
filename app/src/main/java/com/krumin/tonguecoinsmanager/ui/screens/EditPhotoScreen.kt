@@ -61,7 +61,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import coil.compose.AsyncImage
 import com.krumin.tonguecoinsmanager.R
-import com.krumin.tonguecoinsmanager.ui.navigation.Screen
 import com.krumin.tonguecoinsmanager.ui.viewmodel.EditAction
 import com.krumin.tonguecoinsmanager.ui.viewmodel.EditPhotoViewModel
 import com.krumin.tonguecoinsmanager.util.FileUtils
@@ -98,6 +97,20 @@ fun EditPhotoScreen(
         }
     }
 
+    LaunchedEffect(state.error) {
+        state.error?.let {
+            snackbarHostState.showSnackbar(it.asString(context))
+            viewModel.handleAction(EditAction.ClearError)
+        }
+    }
+
+    LaunchedEffect(state.validationErrors) {
+        if (state.validationErrors.containsKey("image")) {
+            val errorRes = state.validationErrors["image"] ?: R.string.error_image_required
+            snackbarHostState.showSnackbar(context.getString(errorRes))
+        }
+    }
+
     LaunchedEffect(state.generatedCategories) {
         state.generatedCategories?.let { genCats ->
             if (genCats.isNotEmpty()) {
@@ -111,15 +124,8 @@ fun EditPhotoScreen(
 
     if (state.isSuccess) {
         LaunchedEffect(Unit) {
-            val result = when {
-                photoId == null -> Screen.RESULT_ADD
-                state.photo == null -> Screen.RESULT_DELETE // If photo is gone from state but success is true
-                else -> Screen.RESULT_EDIT
-            }
-            // Actually, EditPhotoViewModel doesn't clear photo on delete success yet, 
-            // but we can infer based on the action that was taken.
-            // Let's refine this to pass the correct result.
-            onResult(result)
+            // Don't pass result for local (batched) saves - snackbar will show only after batch commit
+            // Just navigate back silently
             onBack()
         }
     }
@@ -548,7 +554,8 @@ fun EditPhotoScreen(
                 EditTextField(
                     value = title,
                     onValueChange = { title = it },
-                    label = stringResource(R.string.field_title_label)
+                    label = stringResource(R.string.field_title_label),
+                    error = state.validationErrors["title"]?.let { stringResource(it) }
                 )
 
                 EditTextField(
@@ -567,13 +574,15 @@ fun EditPhotoScreen(
                     value = difficulty,
                     onValueChange = { if (it.all { char -> char.isDigit() }) difficulty = it },
                     label = stringResource(R.string.field_difficulty_label),
-                    keyboardType = KeyboardType.Number
+                    keyboardType = KeyboardType.Number,
+                    error = state.validationErrors["difficulty"]?.let { stringResource(it) }
                 )
 
                 EditTextField(
                     value = categories,
                     onValueChange = { categories = it },
                     label = stringResource(R.string.field_categories_label),
+                    error = state.validationErrors["categories"]?.let { stringResource(it) },
                     trailingIcon = {
                         if (title.isNotBlank()) {
                             if (state.isGeneratingCategories) {
@@ -600,6 +609,7 @@ fun EditPhotoScreen(
                     Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_large)))
                     Button(
                         onClick = { showDeleteDialog = true },
+                        enabled = !state.isLoading,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(dimensionResource(R.dimen.button_height_large)),
@@ -621,18 +631,11 @@ fun EditPhotoScreen(
                         )
                     }
                 }
-
-                if (state.error != null) {
-                    Text(
-                        text = state.error?.asString() ?: "",
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(dimensionResource(R.dimen.spacing_medium))
-                    )
-                }
             }
         }
     }
 }
+
 
 @Composable
 private fun EditTextField(
@@ -640,15 +643,30 @@ private fun EditTextField(
     onValueChange: (String) -> Unit,
     label: String,
     keyboardType: KeyboardType = KeyboardType.Text,
-    trailingIcon: @Composable (() -> Unit)? = null
+    trailingIcon: @Composable (() -> Unit)? = null,
+    error: String? = null
 ) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        label = { Text(label) },
-        modifier = Modifier.fillMaxWidth(),
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        singleLine = true,
-        trailingIcon = trailingIcon
-    )
+    Column {
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            label = { Text(label) },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+            singleLine = true,
+            trailingIcon = trailingIcon,
+            isError = error != null
+        )
+        if (error != null) {
+            Text(
+                text = error,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(
+                    start = dimensionResource(R.dimen.spacing_normal),
+                    top = dimensionResource(R.dimen.spacing_tiny)
+                )
+            )
+        }
+    }
 }

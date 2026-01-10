@@ -1,26 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Standard Spacing -->
-    <dimen name="spacing_tiny">2.dp</dimen>
-    <dimen name="spacing_small">4.dp</dimen>
-    <dimen name="spacing_medium">8.dp</dimen>
-    <dimen name="spacing_normal">12.dp</dimen>
-    <dimen name="spacing_large">16.dp</dimen>
+    <dimen name="spacing_tiny">2dp</dimen>
+    <dimen name="spacing_small">4dp</dimen>
+    <dimen name="spacing_medium">8dp</dimen>
+    <dimen name="spacing_normal">12dp</dimen>
+    <dimen name="spacing_large">16dp</dimen>
 
     <!-- Component Sizes -->
-    <dimen name="grid_column_min">140.dp</dimen>
-    <dimen name="card_image_height">120.dp</dimen>
-    <dimen name="edit_image_height">200.dp</dimen>
-    <dimen name="button_height_large">56.dp</dimen>
-    <dimen name="icon_size_small">24.dp</dimen>
+    <dimen name="grid_column_min">140dp</dimen>
+    <dimen name="card_image_height">120dp</dimen>
+    <dimen name="edit_image_height">200dp</dimen>
+    <dimen name="button_height_large">56dp</dimen>
+    <dimen name="icon_size_small">24dp</dimen>
 
     <!-- Misc -->
-    <dimen name="surface_elevation">4.dp</dimen>
-    <dimen name="elevation_large">8.dp</dimen>
-    <dimen name="badge_padding_horizontal">6.dp</dimen>
-    <dimen name="badge_radius">4.dp</dimen>
-    <dimen name="download_button_size">40.dp</dimen>
-    <dimen name="progress_size_small">24.dp</dimen>
-    <dimen name="stroke_small">2.dp</dimen>
-    <dimen name="spacing_tiny_horizontal">2.dp</dimen>
+    <dimen name="surface_elevation">4dp</dimen>
+    <dimen name="elevation_large">8dp</dimen>
+    <dimen name="badge_padding_horizontal">6dp</dimen>
+    <dimen name="badge_radius">4dp</dimen>
+    <dimen name="download_button_size">40dp</dimen>
+    <dimen name="progress_size_small">24dp</dimen>
+    <dimen name="stroke_small">2dp</dimen>
+    <dimen name="spacing_tiny_horizontal">2dp</dimen>
+    <dimen name="card_radius_large">24dp</dimen>
+    <dimen name="card_radius_medium">12dp</dimen>
+    <dimen name="surface_elevation_high">12dp</dimen>
+    <dimen name="stroke_thin">1dp</dimen>
+    <dimen name="icon_size_tiny">16dp</dimen>
 </resources>

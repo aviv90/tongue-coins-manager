@@ -1,6 +1,8 @@
 package com.krumin.tonguecoinsmanager.di
 
+import androidx.room.Room
 import com.krumin.tonguecoinsmanager.BuildConfig
+import com.krumin.tonguecoinsmanager.data.local.AppDatabase
 import com.krumin.tonguecoinsmanager.data.repository.GcsPhotoRepository
 import com.krumin.tonguecoinsmanager.data.service.GeminiCategoryGenerator
 import com.krumin.tonguecoinsmanager.domain.repository.PhotoRepository
@@ -12,10 +14,22 @@ import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
 val appModule = module {
+    // Database
+    single {
+        Room.databaseBuilder(
+            androidContext(),
+            AppDatabase::class.java,
+            "tongue_coins_db"
+        ).build()
+    }
+
+    single { get<AppDatabase>().pendingChangeDao() }
+
     // Repository
     single<PhotoRepository> {
         GcsPhotoRepository(
             context = androidContext(),
+            pendingChangeDao = get(),
             privateBucketName = com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.PRIVATE_BUCKET,
             publicBucketName = com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.PUBLIC_BUCKET
         )

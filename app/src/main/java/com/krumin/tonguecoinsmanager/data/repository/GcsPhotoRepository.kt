@@ -11,20 +11,37 @@ import com.google.cloud.storage.BlobId
 import com.google.cloud.storage.BlobInfo
 import com.google.cloud.storage.Storage
 import com.google.cloud.storage.StorageOptions
+import com.krumin.tonguecoinsmanager.data.local.ChangeType
+import com.krumin.tonguecoinsmanager.data.local.PendingChangeDao
+import com.krumin.tonguecoinsmanager.data.local.PendingChangeEntity
+import com.krumin.tonguecoinsmanager.domain.model.PendingChange
 import com.krumin.tonguecoinsmanager.domain.model.PhotoMetadata
 import com.krumin.tonguecoinsmanager.domain.repository.PhotoRepository
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import java.io.File
 
 class GcsPhotoRepository(
     private val context: Context,
+    private val pendingChangeDao: PendingChangeDao,
     private val privateBucketName: String,
     private val publicBucketName: String,
     private val jsonFileName: String = DEFAULT_JSON_FILE,
     private val keyFileName: String = DEFAULT_KEY_FILE
 ) : PhotoRepository {
+
+    private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    override val pendingChanges: StateFlow<List<PendingChange>> = pendingChangeDao.getAll()
+        .map { entities -> entities.mapNotNull { it.toDomainModel() } }
+        .stateIn(repositoryScope, SharingStarted.Eagerly, emptyList())
 
     private val storage: Storage by lazy {
         try {
@@ -42,6 +59,50 @@ class GcsPhotoRepository(
         encodeDefaults = true
     }
 
+    private fun PendingChangeEntity.toDomainModel(): PendingChange? {
+        val metadata = try {
+            json.decodeFromString<PhotoMetadata>(metadataJson)
+        } catch (e: Exception) {
+            return null
+        }
+        return when (type) {
+            ChangeType.ADD -> {
+                val file = imageFilePath?.let { File(it) }
+                if (file?.exists() == true) {
+                    PendingChange.Add(id, metadata, file)
+                } else null
+            }
+
+            ChangeType.EDIT -> PendingChange.Edit(id, metadata, imageFilePath?.let { File(it) })
+            ChangeType.DELETE -> PendingChange.Delete(id, metadata)
+        }
+    }
+
+    private fun PendingChange.toEntity(): PendingChangeEntity {
+        return when (this) {
+            is PendingChange.Add -> PendingChangeEntity(
+                id = id,
+                type = ChangeType.ADD,
+                metadataJson = json.encodeToString(metadata),
+                imageFilePath = imageFile.absolutePath
+            )
+
+            is PendingChange.Edit -> PendingChangeEntity(
+                id = id,
+                type = ChangeType.EDIT,
+                metadataJson = json.encodeToString(metadata),
+                imageFilePath = newImageFile?.absolutePath
+            )
+
+            is PendingChange.Delete -> PendingChangeEntity(
+                id = id,
+                type = ChangeType.DELETE,
+                metadataJson = json.encodeToString(metadata),
+                imageFilePath = null
+            )
+        }
+    }
+
     override suspend fun getPhotos(): List<PhotoMetadata> = withContext(Dispatchers.IO) {
         val blob = storage.get(BlobId.of(privateBucketName, jsonFileName))
         if (blob == null || blob.size == 0L) return@withContext emptyList()
@@ -57,14 +118,14 @@ class GcsPhotoRepository(
         return "$ID_PREFIX${maxId + 1}"
     }
 
-    override suspend fun uploadPhoto(imageFile: File, metadata: PhotoMetadata) =
+    override suspend fun uploadPhoto(imageFile: File, metadata: PhotoMetadata, commit: Boolean) {
         withContext(Dispatchers.IO) {
-            val currentPhotos = getPhotos().toMutableList()
+            val currentPhotos = getPhotos()
             val isNew = currentPhotos.none { it.id == metadata.id } || metadata.id.isEmpty()
-
             val finalId = if (isNew) generateNextId(currentPhotos) else metadata.id
-            val existingIndex = currentPhotos.indexOfFirst { it.id == finalId }
-            val existing = if (existingIndex != -1) currentPhotos[existingIndex] else null
+
+            // For updates: merge with existing data to preserve all fields
+            val existing = currentPhotos.find { it.id == finalId }
             val finalVersion = if (isNew) 1 else (existing?.version ?: 0) + 1
             val finalImageUrl = "$GCS_BASE_URL/$publicBucketName/$finalId$IMAGE_EXT?v=$finalVersion"
 
@@ -74,105 +135,229 @@ class GcsPhotoRepository(
             val aspectRatio =
                 if (options.outHeight > 0) options.outWidth.toFloat() / options.outHeight else 1.0f
 
-            // For updates: merge with existing data to preserve all fields
-            val finalMetadata = if (existing != null) {
-                existing.copy(
-                    id = finalId,
-                    imageUrl = finalImageUrl,
-                    title = metadata.title,
-                    credit = metadata.credit,
-                    hint = metadata.hint,
-                    difficulty = metadata.difficulty,
-                    categories = metadata.categories,
-                    version = finalVersion,
-                    aspectRatio = aspectRatio
-                )
-            } else {
-                metadata.copy(
-                    id = finalId,
-                    imageUrl = finalImageUrl,
-                    version = finalVersion,
-                    aspectRatio = aspectRatio
-                )
-            }
-
-            // 1. Upload image
-            val blobId = BlobId.of(publicBucketName, "$finalId$IMAGE_EXT")
-            val blobInfo = BlobInfo.newBuilder(blobId).setContentType(CONTENT_TYPE_JPEG).build()
-            storage.create(blobInfo, imageFile.readBytes())
-
-            // 2. Update JSON
-            if (existingIndex != -1) {
-                currentPhotos[existingIndex] = finalMetadata.trimmed()
-            } else {
-                currentPhotos.add(finalMetadata.trimmed())
-            }
-            savePhotosJson(currentPhotos)
-        }
-
-    override suspend fun updateMetadata(metadata: PhotoMetadata) = withContext(Dispatchers.IO) {
-        val currentPhotos = getPhotos().toMutableList()
-        val index = currentPhotos.indexOfFirst { it.id == metadata.id }
-        if (index != -1) {
-            val existing = currentPhotos[index]
-            // Merge: Use incoming values but preserve any fields that might be missing
-            val updatedMetadata = existing.copy(
+            val finalMetadata = (existing ?: metadata).copy(
+                id = finalId,
+                imageUrl = finalImageUrl,
                 title = metadata.title,
                 credit = metadata.credit,
                 hint = metadata.hint,
                 difficulty = metadata.difficulty,
                 categories = metadata.categories,
-                imageUrl = "${existing.imageUrl.substringBefore("?v=")}?v=${existing.version + 1}",
-                version = existing.version + 1
-            )
-            currentPhotos[index] = updatedMetadata.trimmed()
+                version = finalVersion,
+                aspectRatio = aspectRatio
+            ).trimmed()
+
+            if (commit) {
+                // 1. Upload image
+                val blobId = BlobId.of(publicBucketName, "$finalId$IMAGE_EXT")
+                val blobInfo = BlobInfo.newBuilder(blobId).setContentType(CONTENT_TYPE_JPEG).build()
+                storage.create(blobInfo, imageFile.readBytes())
+
+                // 2. Update JSON
+                val updatedList = currentPhotos.toMutableList()
+                val existingIndex = updatedList.indexOfFirst { it.id == finalId }
+                if (existingIndex != -1) {
+                    updatedList[existingIndex] = finalMetadata
+                } else {
+                    updatedList.add(finalMetadata)
+                }
+                savePhotosJson(updatedList)
+            } else {
+                // Check for existing pending change
+                val existingEntity = pendingChangeDao.getAllSync().find { it.id == finalId }
+
+                val change = if (isNew || existingEntity?.type == ChangeType.ADD) {
+                    PendingChange.Add(finalId, finalMetadata, imageFile)
+                } else {
+                    PendingChange.Edit(finalId, finalMetadata, imageFile)
+                }
+                pendingChangeDao.upsert(change.toEntity())
+            }
+        }
+    }
+
+    override suspend fun updateMetadata(metadata: PhotoMetadata, commit: Boolean) {
+        withContext(Dispatchers.IO) {
+            val currentPhotos = getPhotos()
+            val existingEntity = pendingChangeDao.getAllSync().find { it.id == metadata.id }
+
+            // Use pending change metadata as base if exists, otherwise use server data
+            val baseMetadata = if (existingEntity != null) {
+                try {
+                    json.decodeFromString<PhotoMetadata>(existingEntity.metadataJson)
+                } catch (e: Exception) {
+                    currentPhotos.find { it.id == metadata.id }
+                }
+            } else {
+                currentPhotos.find { it.id == metadata.id }
+            } ?: return@withContext
+
+            val updatedMetadata = baseMetadata.copy(
+                title = metadata.title,
+                credit = metadata.credit,
+                hint = metadata.hint,
+                difficulty = metadata.difficulty,
+                categories = metadata.categories,
+                imageUrl = "${baseMetadata.imageUrl.substringBefore("?v=")}?v=${baseMetadata.version + 1}",
+                version = baseMetadata.version + 1
+            ).trimmed()
+
+            if (commit) {
+                val updatedList = currentPhotos.toMutableList()
+                val index = updatedList.indexOfFirst { it.id == metadata.id }
+                if (index != -1) {
+                    updatedList[index] = updatedMetadata
+                    savePhotosJson(updatedList)
+                }
+            } else {
+                val change = when (existingEntity?.type) {
+                    ChangeType.ADD -> {
+                        // Preserve the Add type and original image file
+                        val originalFile = existingEntity.imageFilePath?.let { File(it) }
+                        if (originalFile?.exists() == true) {
+                            PendingChange.Add(metadata.id, updatedMetadata, originalFile)
+                        } else {
+                            PendingChange.Edit(metadata.id, updatedMetadata)
+                        }
+                    }
+
+                    ChangeType.EDIT -> {
+                        // Preserve any existing image file
+                        PendingChange.Edit(
+                            metadata.id,
+                            updatedMetadata,
+                            existingEntity.imageFilePath?.let { File(it) })
+                    }
+
+                    else -> PendingChange.Edit(metadata.id, updatedMetadata)
+                }
+                pendingChangeDao.upsert(change.toEntity())
+            }
+        }
+    }
+
+    override suspend fun deletePhoto(id: String, commit: Boolean) {
+        withContext(Dispatchers.IO) {
+            val currentPhotos = getPhotos()
+            if (commit) {
+                storage.delete(BlobId.of(publicBucketName, "$id$IMAGE_EXT"))
+                val updatedPhotos = currentPhotos.toMutableList()
+                updatedPhotos.removeAll { it.id == id }
+                savePhotosJson(updatedPhotos)
+            } else {
+                val existingEntity = pendingChangeDao.getAllSync().find { it.id == id }
+
+                if (existingEntity?.type == ChangeType.ADD) {
+                    // If it was added in this batch, just remove the add change
+                    pendingChangeDao.delete(id)
+                } else {
+                    val existingMetadata = currentPhotos.find { it.id == id }
+                    if (existingMetadata != null) {
+                        pendingChangeDao.upsert(
+                            PendingChange.Delete(id, existingMetadata).toEntity()
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    override suspend fun commitChanges() {
+        withContext(Dispatchers.IO) {
+            val entities = pendingChangeDao.getAllSync()
+            if (entities.isEmpty()) return@withContext
+
+            val changes = entities.mapNotNull { it.toDomainModel() }
+            val currentPhotos = getPhotos().toMutableList()
+
+            changes.forEach { change ->
+                when (change) {
+                    is PendingChange.Add -> {
+                        // Upload image
+                        val blobId = BlobId.of(publicBucketName, "${change.id}$IMAGE_EXT")
+                        val blobInfo =
+                            BlobInfo.newBuilder(blobId).setContentType(CONTENT_TYPE_JPEG).build()
+                        storage.create(blobInfo, change.imageFile.readBytes())
+
+                        // Add to list
+                        currentPhotos.add(change.metadata)
+                    }
+
+                    is PendingChange.Edit -> {
+                        // Upload new image if present
+                        change.newImageFile?.let { imageFile ->
+                            val blobId = BlobId.of(publicBucketName, "${change.id}$IMAGE_EXT")
+                            val blobInfo =
+                                BlobInfo.newBuilder(blobId).setContentType(CONTENT_TYPE_JPEG)
+                                    .build()
+                            storage.create(blobInfo, imageFile.readBytes())
+                        }
+
+                        // Update in list
+                        val index = currentPhotos.indexOfFirst { it.id == change.id }
+                        if (index != -1) {
+                            currentPhotos[index] = change.metadata
+                        }
+                    }
+
+                    is PendingChange.Delete -> {
+                        // Delete image
+                        storage.delete(BlobId.of(publicBucketName, "${change.id}$IMAGE_EXT"))
+
+                        // Remove from list
+                        currentPhotos.removeAll { it.id == change.id }
+                    }
+                }
+            }
+
             savePhotosJson(currentPhotos)
+            // Only clear from database after successful commit
+            pendingChangeDao.deleteAll()
         }
     }
 
-    override suspend fun deletePhoto(id: String) = withContext(Dispatchers.IO) {
-        storage.delete(BlobId.of(publicBucketName, "$id$IMAGE_EXT"))
-        val currentPhotos = getPhotos().toMutableList()
-        currentPhotos.removeAll { it.id == id }
-        savePhotosJson(currentPhotos)
+    override suspend fun discardChanges() {
+        pendingChangeDao.deleteAll()
     }
 
-    override suspend fun downloadPhoto(photo: PhotoMetadata): Unit = withContext(Dispatchers.IO) {
-        val blob = storage.get(BlobId.of(publicBucketName, "${photo.id}$IMAGE_EXT"))
-        if (blob == null) return@withContext
+    override suspend fun downloadPhoto(photo: PhotoMetadata) {
+        withContext(Dispatchers.IO) {
+            val blob = storage.get(BlobId.of(publicBucketName, "${photo.id}$IMAGE_EXT"))
+            if (blob == null) return@withContext
 
-        val bytes = blob.getContent()
-        val displayName = "${photo.title.replace(" ", "_")}_${photo.id}$IMAGE_EXT"
+            val bytes = blob.getContent()
+            val displayName = "${photo.title.replace(" ", "_")}_${photo.id}$IMAGE_EXT"
 
-        val contentValues = ContentValues().apply {
-            put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
-            put(MediaStore.MediaColumns.MIME_TYPE, CONTENT_TYPE_JPEG)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                put(
-                    MediaStore.MediaColumns.RELATIVE_PATH,
-                    Environment.DIRECTORY_PICTURES + com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.DOWNLOAD_FOLDER
-                )
-                put(MediaStore.MediaColumns.IS_PENDING, 1)
-            }
-        }
-
-        val resolver = context.contentResolver
-        val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
-
-        uri?.let {
-            resolver.openOutputStream(it)?.use { outputStream ->
-                outputStream.write(bytes)
+            val contentValues = ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
+                put(MediaStore.MediaColumns.MIME_TYPE, CONTENT_TYPE_JPEG)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    put(
+                        MediaStore.MediaColumns.RELATIVE_PATH,
+                        Environment.DIRECTORY_PICTURES + com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.DOWNLOAD_FOLDER
+                    )
+                    put(MediaStore.MediaColumns.IS_PENDING, 1)
+                }
             }
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                contentValues.clear()
-                contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0)
-                resolver.update(it, contentValues, null, null)
+            val resolver = context.contentResolver
+            val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+
+            uri?.let {
+                resolver.openOutputStream(it)?.use { outputStream ->
+                    outputStream.write(bytes)
+                }
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    contentValues.clear()
+                    contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0)
+                    resolver.update(it, contentValues, null, null)
+                }
             }
         }
     }
 
-    private fun savePhotosJson(photos: List<PhotoMetadata>) {
+    private suspend fun savePhotosJson(photos: List<PhotoMetadata>) = withContext(Dispatchers.IO) {
         val jsonContent = json.encodeToString(photos)
         val blobId = BlobId.of(privateBucketName, jsonFileName)
         val blobInfo = BlobInfo.newBuilder(blobId).setContentType(CONTENT_TYPE_JSON).build()
