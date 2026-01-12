@@ -24,7 +24,8 @@ data class MainState(
     val error: UiText? = null,
     val isDownloading: Boolean = false,
     val downloadingPhotoId: String? = null,
-    val downloadSuccess: UiText? = null
+    val downloadSuccess: UiText? = null,
+    val commitSuccess: Boolean = false
 )
 
 sealed interface MainAction {
@@ -35,6 +36,7 @@ sealed interface MainAction {
     object ClearDownloadStatus : MainAction
     object CommitChanges : MainAction
     object DiscardChanges : MainAction
+    object ClearCommitStatus : MainAction
 }
 
 class MainViewModel(
@@ -95,6 +97,7 @@ class MainViewModel(
             is MainAction.ClearDownloadStatus -> _state.update { it.copy(downloadSuccess = null) }
             is MainAction.CommitChanges -> commitChanges()
             is MainAction.DiscardChanges -> discardChanges()
+            is MainAction.ClearCommitStatus -> _state.update { it.copy(commitSuccess = false) }
         }
     }
 
@@ -123,12 +126,12 @@ class MainViewModel(
 
     private fun commitChanges() {
         viewModelScope.launch {
-            _state.update { it.copy(isCommitting = true, error = null) }
+            _state.update { it.copy(isCommitting = true, error = null, commitSuccess = false) }
             try {
                 repository.commitChanges()
                 // Await a fresh load of photos before finishing the committing state
                 refreshPhotos()
-                _state.update { it.copy(isCommitting = false) }
+                _state.update { it.copy(isCommitting = false, commitSuccess = true) }
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
                 _state.update {

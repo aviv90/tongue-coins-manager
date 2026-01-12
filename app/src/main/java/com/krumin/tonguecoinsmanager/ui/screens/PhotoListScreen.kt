@@ -133,6 +133,13 @@ fun PhotoListScreen(
         }
     }
 
+    LaunchedEffect(state.commitSuccess) {
+        if (state.commitSuccess) {
+            snackbarHostState.showSnackbar(context.getString(R.string.success_batch_commit))
+            viewModel.handleAction(MainAction.ClearCommitStatus)
+        }
+    }
+
     LaunchedEffect(state.error) {
         state.error?.let {
             if (state.photos.isNotEmpty()) {

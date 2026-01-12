@@ -38,6 +38,13 @@ class GcsPhotoRepository(
 ) : PhotoRepository {
 
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val pendingImagesDir = File(context.filesDir, "pending_images")
+
+    init {
+        if (!pendingImagesDir.exists()) {
+            pendingImagesDir.mkdirs()
+        }
+    }
 
     override val pendingChanges: StateFlow<List<PendingChange>> = pendingChangeDao.getAll()
         .map { entities -> entities.mapNotNull { it.toDomainModel() } }
@@ -163,15 +170,30 @@ class GcsPhotoRepository(
                 }
                 savePhotosJson(updatedList)
             } else {
+                // Copy image to persistent internal storage
+                val persistentFile =
+                    File(pendingImagesDir, "${finalId}_${System.currentTimeMillis()}.jpg")
+                imageFile.copyTo(persistentFile, overwrite = true)
+
                 // Check for existing pending change
                 val existingEntity = pendingChangeDao.getAllSync().find { it.id == finalId }
 
                 val change = if (isNew || existingEntity?.type == ChangeType.ADD) {
-                    PendingChange.Add(finalId, finalMetadata, imageFile)
+                    PendingChange.Add(finalId, finalMetadata, persistentFile)
                 } else {
-                    PendingChange.Edit(finalId, finalMetadata, imageFile)
+                    PendingChange.Edit(finalId, finalMetadata, persistentFile)
                 }
                 pendingChangeDao.upsert(change.toEntity())
+
+                // If there was an old file, let's clean it up (optional but good)
+                existingEntity?.imageFilePath?.let { oldPath ->
+                    if (oldPath != persistentFile.absolutePath && oldPath.startsWith(
+                            pendingImagesDir.absolutePath
+                        )
+                    ) {
+                        File(oldPath).delete()
+                    }
+                }
             }
         }
     }
@@ -248,6 +270,8 @@ class GcsPhotoRepository(
                 val existingEntity = pendingChangeDao.getAllSync().find { it.id == id }
 
                 if (existingEntity?.type == ChangeType.ADD) {
+                    // Clean up internal image file
+                    existingEntity.imageFilePath?.let { File(it).delete() }
                     // If it was added in this batch, just remove the add change
                     pendingChangeDao.delete(id)
                 } else {
@@ -273,6 +297,10 @@ class GcsPhotoRepository(
             changes.forEach { change ->
                 when (change) {
                     is PendingChange.Add -> {
+                        // Verify file exists
+                        if (!change.imageFile.exists()) {
+                            throw IllegalStateException("Missing image file for adding photo ${change.id}")
+                        }
                         // Upload image
                         val blobId = BlobId.of(publicBucketName, "${change.id}$IMAGE_EXT")
                         val blobInfo =
@@ -286,6 +314,9 @@ class GcsPhotoRepository(
                     is PendingChange.Edit -> {
                         // Upload new image if present
                         change.newImageFile?.let { imageFile ->
+                            if (!imageFile.exists()) {
+                                throw IllegalStateException("Missing new image file for editing photo ${change.id}")
+                            }
                             val blobId = BlobId.of(publicBucketName, "${change.id}$IMAGE_EXT")
                             val blobInfo =
                                 BlobInfo.newBuilder(blobId).setContentType(CONTENT_TYPE_JPEG)
@@ -311,12 +342,16 @@ class GcsPhotoRepository(
             }
 
             savePhotosJson(currentPhotos)
+
+            // Success! Clean up all pending internal files
+            pendingImagesDir.listFiles()?.forEach { it.delete() }
             // Only clear from database after successful commit
             pendingChangeDao.deleteAll()
         }
     }
 
     override suspend fun discardChanges() {
+        pendingImagesDir.listFiles()?.forEach { it.delete() }
         pendingChangeDao.deleteAll()
     }
 

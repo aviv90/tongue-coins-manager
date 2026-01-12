@@ -65,4 +65,5 @@
     <string name="pending_badge">טיוטה</string>
     <string name="error_field_required">שדה זה הוא חובה</string>
     <string name="error_image_required">חובה לבחור תמונה</string>
+    <string name="success_batch_commit">כל השינויים נשמרו בהצלחה בשרת</string>
 </resources>
