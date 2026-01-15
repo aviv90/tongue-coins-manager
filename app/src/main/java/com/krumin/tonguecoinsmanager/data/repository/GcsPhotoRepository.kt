@@ -118,18 +118,30 @@ class GcsPhotoRepository(
         json.decodeFromString<List<PhotoMetadata>>(content)
     }
 
-    private fun generateNextId(currentPhotos: List<PhotoMetadata>): String {
-        val maxId = currentPhotos
+    private fun generateNextId(
+        currentPhotos: List<PhotoMetadata>,
+        pendingChanges: List<PendingChangeEntity>
+    ): String {
+        val serverMaxId = currentPhotos
             .mapNotNull { it.id.removePrefix(ID_PREFIX).toIntOrNull() }
             .maxOrNull() ?: 0
+
+        val pendingMaxId = pendingChanges
+            .mapNotNull { it.id.removePrefix(ID_PREFIX).toIntOrNull() }
+            .maxOrNull() ?: 0
+
+        val maxId = maxOf(serverMaxId, pendingMaxId)
         return "$ID_PREFIX${maxId + 1}"
     }
 
     override suspend fun uploadPhoto(imageFile: File, metadata: PhotoMetadata, commit: Boolean) {
         withContext(Dispatchers.IO) {
             val currentPhotos = getPhotos()
+            val pendingChanges = pendingChangeDao.getAllSync()
+            
+            // Generate ID considering BOTH server photos AND pending changes to avoid collision
             val isNew = currentPhotos.none { it.id == metadata.id } || metadata.id.isEmpty()
-            val finalId = if (isNew) generateNextId(currentPhotos) else metadata.id
+            val finalId = if (isNew) generateNextId(currentPhotos, pendingChanges) else metadata.id
 
             // For updates: merge with existing data to preserve all fields
             val existing = currentPhotos.find { it.id == finalId }
