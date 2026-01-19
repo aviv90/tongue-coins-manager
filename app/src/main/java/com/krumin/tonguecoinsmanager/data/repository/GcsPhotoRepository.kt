@@ -143,8 +143,18 @@ class GcsPhotoRepository(
             val isNew = currentPhotos.none { it.id == metadata.id } || metadata.id.isEmpty()
             val finalId = if (isNew) generateNextId(currentPhotos, pendingChanges) else metadata.id
 
-            // For updates: merge with existing data to preserve all fields
-            val existing = currentPhotos.find { it.id == finalId }
+            // Check for existing pending change FIRST to use its version as base
+            val existingPending = pendingChanges.find { it.id == finalId }
+            val existingPendingMetadata = existingPending?.let {
+                try {
+                    json.decodeFromString<PhotoMetadata>(it.metadataJson)
+                } catch (e: Exception) {
+                    null
+                }
+            }
+            
+            // For updates: prefer pending metadata, then server metadata
+            val existing = existingPendingMetadata ?: currentPhotos.find { it.id == finalId }
             val finalVersion = if (isNew) 1 else (existing?.version ?: 0) + 1
             val finalImageUrl = "$GCS_BASE_URL/$publicBucketName/$finalId$IMAGE_EXT?v=$finalVersion"
 
