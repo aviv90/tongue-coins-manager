@@ -35,6 +35,6 @@ object PromptTemplates {
     }
 
     fun getImageEditingPrompt(userPrompt: String): String {
-        return "ערוך את התמונה המצורפת בהתאם להוראה הבאה: $userPrompt"
+        return "Edit this image based on the following instruction: $userPrompt"
     }
 }
