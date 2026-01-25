@@ -138,7 +138,7 @@ class GcsPhotoRepository(
         withContext(Dispatchers.IO) {
             val currentPhotos = getPhotos()
             val pendingChanges = pendingChangeDao.getAllSync()
-            
+
             // Generate ID considering BOTH server photos AND pending changes to avoid collision
             val isNew = currentPhotos.none { it.id == metadata.id } || metadata.id.isEmpty()
             val finalId = if (isNew) generateNextId(currentPhotos, pendingChanges) else metadata.id
@@ -152,7 +152,7 @@ class GcsPhotoRepository(
                     null
                 }
             }
-            
+
             // For updates: prefer pending metadata, then server metadata
             val existing = existingPendingMetadata ?: currentPhotos.find { it.id == finalId }
             val finalVersion = if (isNew) 1 else (existing?.version ?: 0) + 1

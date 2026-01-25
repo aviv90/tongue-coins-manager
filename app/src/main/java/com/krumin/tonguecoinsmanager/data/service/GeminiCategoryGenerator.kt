@@ -25,7 +25,7 @@ class GeminiCategoryGenerator(
         Firebase.ai(backend = GenerativeBackend.googleAI()).generativeModel(
             modelName = "gemini-3-flash-preview",
             generationConfig = generationConfig {
-                temperature = 0.45f
+                temperature = 1.0f
                 topP = 0.95f
                 topK = 40
                 responseMimeType = "application/json"

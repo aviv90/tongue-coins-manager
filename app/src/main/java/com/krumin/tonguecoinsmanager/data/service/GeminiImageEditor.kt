@@ -29,12 +29,11 @@ class GeminiImageEditor(
         Firebase.ai(backend = GenerativeBackend.googleAI()).generativeModel(
             modelName = "gemini-3-pro-image-preview", // Nano Banana Pro
             generationConfig = generationConfig {
-                temperature = 0.7f
+                temperature = 1.0f
                 topP = 0.95f
                 topK = 40
                 // Required for Gemini 3 / Nano Banana to return images
                 responseModalities = listOf(
-                    ResponseModality.TEXT,
                     ResponseModality.IMAGE
                 )
             },

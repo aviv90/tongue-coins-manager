@@ -35,14 +35,6 @@ object PromptTemplates {
     }
 
     fun getImageEditingPrompt(userPrompt: String): String {
-        return """
-            אתה עוזר עריכת תמונות מתקדם (Nano Banana Pro). 
-            המשימה שלך היא לערוך את התמונה המצורפת בהתאם לבקשת המשתמש.
-            
-            בקשת המשתמש: $userPrompt
-            
-            התייחס לתמונה כבסיס ובצע את השינויים הנדרשים בצורה הטבעית והמרשימה ביותר.
-            החזר את התמונה הערוכה בלבד כקובץ תמונה.
-        """.trimIndent()
+        return "ערוך את התמונה המצורפת בהתאם להוראה הבאה: $userPrompt"
     }
 }
