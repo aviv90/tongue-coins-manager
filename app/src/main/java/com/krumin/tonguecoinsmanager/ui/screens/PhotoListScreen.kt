@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
@@ -50,6 +51,7 @@ import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
@@ -102,6 +104,7 @@ fun PhotoListScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
     val focusRequester = remember { FocusRequester() }
+    var photoIdToUndoDeletion by remember { mutableStateOf<String?>(null) }
 
     // Observe result from EditPhotoScreen
     val navigationResult = navController?.currentBackStackEntry
@@ -326,9 +329,17 @@ fun PhotoListScreen(
                                             items = state.filteredPhotos,
                                             key = { it.id }
                                         ) { photo ->
+                                            val pendingChange =
+                                                state.pendingChanges.find { it.id == photo.id }
                                             PhotoCard(
                                                 photo = photo,
-                                                onClick = { onEditPhoto(photo.id) },
+                                                onClick = {
+                                                    if (pendingChange is PendingChange.Delete) {
+                                                        photoIdToUndoDeletion = photo.id
+                                                    } else {
+                                                        onEditPhoto(photo.id)
+                                                    }
+                                                },
                                                 onDownload = {
                                                     viewModel.handleAction(
                                                         MainAction.DownloadPhoto(
@@ -337,7 +348,8 @@ fun PhotoListScreen(
                                                     )
                                                 },
                                                 isDownloading = state.downloadingPhotoId == photo.id,
-                                                pendingChange = state.pendingChanges.find { it.id == photo.id }
+                                                isDownloading = state.downloadingPhotoId == photo.id,
+                                                pendingChange = pendingChange
                                             )
                                         }
                                     }
@@ -374,6 +386,18 @@ fun PhotoListScreen(
 
             }
         }
+    }
+
+    if (photoIdToUndoDeletion != null) {
+        UndoDeletionDialog(
+            onConfirm = {
+                photoIdToUndoDeletion?.let { id ->
+                    viewModel.handleAction(MainAction.CancelDeletion(id))
+                }
+                photoIdToUndoDeletion = null
+            },
+            onDismiss = { photoIdToUndoDeletion = null }
+        )
     }
 }
 
@@ -458,7 +482,8 @@ fun PhotoCard(
                         .fillMaxWidth()
                         .height(dimensionResource(R.dimen.card_image_height))
                         .clip(MaterialTheme.shapes.medium),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
+                    alpha = if (pendingChange is PendingChange.Delete) 0.5f else 1.0f
                 )
 
                 Surface(
@@ -485,7 +510,12 @@ fun PhotoCard(
                         onClick = { },
                         label = {
                             Text(
-                                text = stringResource(R.string.pending_badge),
+                                text = stringResource(
+                                    when (pendingChange) {
+                                        is PendingChange.Delete -> R.string.deleted_badge
+                                        else -> R.string.pending_badge
+                                    }
+                                ),
                                 style = MaterialTheme.typography.labelSmall
                             )
                         },
@@ -504,7 +534,17 @@ fun PhotoCard(
                             .padding(dimensionResource(R.dimen.spacing_medium))
                             .align(Alignment.BottomStart),
                         colors = SuggestionChipDefaults.suggestionChipColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.9f)
+                            containerColor = when (pendingChange) {
+                                is PendingChange.Delete -> MaterialTheme.colorScheme.errorContainer.copy(
+                                    alpha = 0.9f
+                                )
+
+                                else -> MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.9f)
+                            },
+                            labelColor = when (pendingChange) {
+                                is PendingChange.Delete -> MaterialTheme.colorScheme.onErrorContainer
+                                else -> MaterialTheme.colorScheme.onSecondaryContainer
+                            }
                         ),
                         border = null,
                         shape = RoundedCornerShape(dimensionResource(R.dimen.badge_radius))
@@ -560,4 +600,42 @@ fun PhotoCard(
             }
         }
     }
+}
+
+@Composable
+fun UndoDeletionDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = stringResource(R.string.undo_delete_title),
+                style = MaterialTheme.typography.titleLarge
+            )
+        },
+        text = {
+            Text(
+                text = stringResource(R.string.undo_delete_message),
+                style = MaterialTheme.typography.bodyMedium
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(
+                    text = stringResource(R.string.undo_delete_confirm),
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(
+                    text = stringResource(R.string.cancel_button),
+                    color = MaterialTheme.colorScheme.outline
+                )
+            }
+        }
+    )
 }

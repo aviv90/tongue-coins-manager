@@ -18,4 +18,6 @@ interface PhotoRepository {
     suspend fun discardChanges()
 
     suspend fun downloadPhoto(photo: PhotoMetadata)
+
+    suspend fun cancelDeletion(id: String)
 }

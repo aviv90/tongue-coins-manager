@@ -37,6 +37,7 @@ sealed interface MainAction {
     object CommitChanges : MainAction
     object DiscardChanges : MainAction
     object ClearCommitStatus : MainAction
+    data class CancelDeletion(val id: String) : MainAction
 }
 
 class MainViewModel(
@@ -70,18 +71,23 @@ class MainViewModel(
         pending.forEach { change ->
             when (change) {
                 is PendingChange.Add -> {
-                    result.add(change.metadata)
+                    // Use local file path for display
+                    result.add(change.metadata.copy(imageUrl = change.imageFile.absolutePath))
                 }
 
                 is PendingChange.Edit -> {
                     val index = result.indexOfFirst { it.id == change.id }
                     if (index != -1) {
-                        result[index] = change.metadata
+                        // Use local file path if image was edited
+                        val imageUrl =
+                            change.newImageFile?.absolutePath ?: change.metadata.imageUrl
+                        result[index] = change.metadata.copy(imageUrl = imageUrl)
                     }
                 }
 
                 is PendingChange.Delete -> {
-                    result.removeAll { it.id == change.id }
+                    // We keep the photo in the list so it can be shown with a "deleted" badge
+                    // The UI will handle the display logic based on the presence of this PendingChange
                 }
             }
         }
@@ -98,6 +104,7 @@ class MainViewModel(
             is MainAction.CommitChanges -> commitChanges()
             is MainAction.DiscardChanges -> discardChanges()
             is MainAction.ClearCommitStatus -> _state.update { it.copy(commitSuccess = false) }
+            is MainAction.CancelDeletion -> cancelDeletion(action.id)
         }
     }
 
@@ -147,6 +154,12 @@ class MainViewModel(
     private fun discardChanges() {
         viewModelScope.launch {
             repository.discardChanges()
+        }
+    }
+
+    private fun cancelDeletion(id: String) {
+        viewModelScope.launch {
+            repository.cancelDeletion(id)
         }
     }
 

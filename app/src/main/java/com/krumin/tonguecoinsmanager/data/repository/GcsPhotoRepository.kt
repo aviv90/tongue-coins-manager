@@ -437,4 +437,13 @@ class GcsPhotoRepository(
         private const val CONTENT_TYPE_JSON =
             com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.CONTENT_TYPE_JSON
     }
+
+    override suspend fun cancelDeletion(id: String) {
+        withContext(Dispatchers.IO) {
+            val pending = pendingChangeDao.getAllSync().find { it.id == id }
+            if (pending?.type == ChangeType.DELETE) {
+                pendingChangeDao.delete(id)
+            }
+        }
+    }
 }
