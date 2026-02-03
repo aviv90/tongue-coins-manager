@@ -348,7 +348,6 @@ fun PhotoListScreen(
                                                     )
                                                 },
                                                 isDownloading = state.downloadingPhotoId == photo.id,
-                                                isDownloading = state.downloadingPhotoId == photo.id,
                                                 pendingChange = pendingChange
                                             )
                                         }
