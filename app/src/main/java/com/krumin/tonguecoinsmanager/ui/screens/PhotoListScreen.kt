@@ -506,7 +506,7 @@ fun PhotoCard(
 
                 if (pendingChange != null) {
                     SuggestionChip(
-                        onClick = { },
+                        onClick = onClick,
                         label = {
                             Text(
                                 text = stringResource(
@@ -611,13 +611,17 @@ fun UndoDeletionDialog(
         title = {
             Text(
                 text = stringResource(R.string.undo_delete_title),
-                style = MaterialTheme.typography.titleLarge
+                style = MaterialTheme.typography.titleLarge,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Start,
+                modifier = Modifier.fillMaxWidth()
             )
         },
         text = {
             Text(
                 text = stringResource(R.string.undo_delete_message),
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Start,
+                modifier = Modifier.fillMaxWidth()
             )
         },
         confirmButton = {
