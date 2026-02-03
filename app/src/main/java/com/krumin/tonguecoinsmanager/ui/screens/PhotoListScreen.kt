@@ -388,15 +388,17 @@ fun PhotoListScreen(
     }
 
     if (photoIdToUndoDeletion != null) {
-        UndoDeletionDialog(
-            onConfirm = {
-                photoIdToUndoDeletion?.let { id ->
-                    viewModel.handleAction(MainAction.CancelDeletion(id))
-                }
-                photoIdToUndoDeletion = null
-            },
-            onDismiss = { photoIdToUndoDeletion = null }
-        )
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+            UndoDeletionDialog(
+                onConfirm = {
+                    photoIdToUndoDeletion?.let { id ->
+                        viewModel.handleAction(MainAction.CancelDeletion(id))
+                    }
+                    photoIdToUndoDeletion = null
+                },
+                onDismiss = { photoIdToUndoDeletion = null }
+            )
+        }
     }
 }
 
