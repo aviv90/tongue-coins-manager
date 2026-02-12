@@ -28,4 +28,5 @@
     <dimen name="surface_elevation_high">12dp</dimen>
     <dimen name="stroke_thin">1dp</dimen>
     <dimen name="icon_size_tiny">16dp</dimen>
+    <dimen name="fab_content_padding">80dp</dimen>
 </resources>

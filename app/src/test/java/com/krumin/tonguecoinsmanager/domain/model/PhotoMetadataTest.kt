@@ -16,7 +16,8 @@ class PhotoMetadataTest {
             difficulty = 2,
             categories = " category1, category2  ",
             version = 1,
-            aspectRatio = 1.0f
+            aspectRatio = 1.0f,
+            supportedPlatforms = listOf(Platform.ANDROID, Platform.IOS)
         )
 
         val trimmed = metadata.trimmed()

@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
@@ -86,9 +87,11 @@ import coil.compose.AsyncImage
 import com.krumin.tonguecoinsmanager.R
 import com.krumin.tonguecoinsmanager.domain.model.PendingChange
 import com.krumin.tonguecoinsmanager.domain.model.PhotoMetadata
+import com.krumin.tonguecoinsmanager.domain.model.Platform
 import com.krumin.tonguecoinsmanager.ui.navigation.Screen
 import com.krumin.tonguecoinsmanager.ui.viewmodel.MainAction
 import com.krumin.tonguecoinsmanager.ui.viewmodel.MainViewModel
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -105,6 +108,14 @@ fun PhotoListScreen(
     val context = LocalContext.current
     val focusRequester = remember { FocusRequester() }
     var photoIdToUndoDeletion by remember { mutableStateOf<String?>(null) }
+
+    val gridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    val showScrollToBottom by remember {
+        androidx.compose.runtime.derivedStateOf {
+            gridState.canScrollForward
+        }
+    }
 
     // Observe result from EditPhotoScreen
     val navigationResult = navController?.currentBackStackEntry
@@ -314,7 +325,13 @@ fun PhotoListScreen(
                                 } else {
                                     LazyVerticalGrid(
                                         columns = GridCells.Adaptive(dimensionResource(R.dimen.grid_column_min)),
-                                        contentPadding = PaddingValues(dimensionResource(R.dimen.spacing_large)),
+                                        state = gridState,
+                                        contentPadding = PaddingValues(
+                                            start = dimensionResource(R.dimen.spacing_large),
+                                            top = dimensionResource(R.dimen.spacing_large),
+                                            end = dimensionResource(R.dimen.spacing_large),
+                                            bottom = dimensionResource(R.dimen.fab_content_padding)
+                                        ),
                                         horizontalArrangement = Arrangement.spacedBy(
                                             dimensionResource(R.dimen.spacing_large)
                                         ),
@@ -325,10 +342,7 @@ fun PhotoListScreen(
                                         ),
                                         modifier = Modifier.fillMaxSize()
                                     ) {
-                                        items(
-                                            items = state.filteredPhotos,
-                                            key = { it.id }
-                                        ) { photo ->
+                                        items(state.filteredPhotos, key = { it.id }) { photo ->
                                             val pendingChange =
                                                 state.pendingChanges.find { it.id == photo.id }
                                             PhotoCard(
@@ -383,6 +397,32 @@ fun PhotoListScreen(
                 }
 
 
+                // Scroll to Bottom FAB
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = showScrollToBottom,
+                    enter = androidx.compose.animation.scaleIn() + fadeIn(),
+                    exit = androidx.compose.animation.scaleOut() + fadeOut(),
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(dimensionResource(R.dimen.spacing_large))
+                ) {
+                    androidx.compose.material3.SmallFloatingActionButton(
+                        onClick = {
+                            scope.launch {
+                                if (state.filteredPhotos.isNotEmpty()) {
+                                    gridState.animateScrollToItem(state.filteredPhotos.lastIndex)
+                                }
+                            }
+                        },
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowDown,
+                            contentDescription = stringResource(R.string.scroll_to_bottom)
+                        )
+                    }
+                }
             }
         }
     }
@@ -576,6 +616,21 @@ fun PhotoCard(
                     Text(
                         text = stringResource(R.string.difficulty_label, photo.difficulty),
                         style = MaterialTheme.typography.labelSmall
+                    )
+
+                    val android = stringResource(R.string.platform_android)
+                    val ios = stringResource(R.string.platform_ios)
+                    val platformsText = photo.supportedPlatforms.joinToString(", ") { platform ->
+                        when (platform) {
+                            Platform.ANDROID -> android
+                            Platform.IOS -> ios
+                        }
+                    }
+
+                    Text(
+                        text = platformsText,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 

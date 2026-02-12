@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.krumin.tonguecoinsmanager.R
 import com.krumin.tonguecoinsmanager.domain.model.PhotoMetadata
+import com.krumin.tonguecoinsmanager.domain.model.Platform
 import com.krumin.tonguecoinsmanager.domain.repository.PhotoRepository
 import com.krumin.tonguecoinsmanager.domain.service.CategoryGenerator
 import com.krumin.tonguecoinsmanager.domain.service.ImageEditor
@@ -38,6 +39,7 @@ sealed interface EditAction {
         val hint: String,
         val difficulty: Int,
         val categories: String,
+        val supportedPlatforms: List<Platform>,
         val imageFile: File?
     ) : EditAction
 
@@ -175,7 +177,23 @@ class EditPhotoViewModel(
             _state.update { it.copy(isLoading = true, error = null) }
             try {
                 val photos = repository.getPhotos()
-                val photo = photos.find { it.id == id }
+                val pendingChanges = repository.pendingChanges.value
+
+                // Check if there is a pending change for this ID
+                val pendingChange = pendingChanges.find { it.id == id }
+
+                val photo = when (pendingChange) {
+                    is com.krumin.tonguecoinsmanager.domain.model.PendingChange.Add -> pendingChange.metadata
+                    is com.krumin.tonguecoinsmanager.domain.model.PendingChange.Edit -> pendingChange.metadata
+                    is com.krumin.tonguecoinsmanager.domain.model.PendingChange.Delete -> {
+                        // If marked for deletion, we might still show it but maybe with a warning,
+                        // or treat it as not found. For edit screen, showing the metadata is safer.
+                        pendingChange.metadata
+                    }
+
+                    null -> photos.find { it.id == id }
+                }
+
                 _state.update { it.copy(isLoading = false, photo = photo) }
             } catch (e: Exception) {
                 _state.update {
@@ -216,7 +234,8 @@ class EditPhotoViewModel(
                     hint = action.hint,
                     difficulty = action.difficulty,
                     categories = action.categories,
-                    version = _state.value.photo?.version ?: 1
+                    version = _state.value.photo?.version ?: 1,
+                    supportedPlatforms = action.supportedPlatforms
                 )
 
                 // Priority: Confirmed AI image > User selected image > Existing image

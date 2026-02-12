@@ -12,7 +12,8 @@ data class PhotoMetadata(
     val difficulty: Int = 1,
     val categories: String = "",
     val version: Int = 1,
-    val aspectRatio: Float = 1.0f
+    val aspectRatio: Float = 1.0f,
+    val supportedPlatforms: List<Platform> = listOf(Platform.ANDROID, Platform.IOS)
 ) {
     fun trimmed(): PhotoMetadata = copy(
         title = title.trim(),

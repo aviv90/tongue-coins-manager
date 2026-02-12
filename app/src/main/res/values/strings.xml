@@ -33,6 +33,9 @@
     <string name="field_hint_label">רמז</string>
     <string name="field_difficulty_label">דרגת קושי (1-10)</string>
     <string name="field_categories_label">קטגוריות (מופרדות בפסיק)</string>
+    <string name="supported_platforms_label">פלטפורמות נתמכות</string>
+    <string name="platform_android">Android</string>
+    <string name="platform_ios">iOS</string>
 
     <string name="error_loading_photos">טעינת התמונות נכשלה</string>
     <string name="error_loading_photo">טעינת התמונה נכשלה</string>
@@ -70,4 +73,5 @@
     <string name="undo_delete_title">ביטול מחיקה</string>
     <string name="undo_delete_message">האם ברצונך לבטל את המחיקה של תמונה זו?</string>
     <string name="undo_delete_confirm">כן, בטל מחיקה</string>
+    <string name="scroll_to_bottom">גלול לתחתית</string>
 </resources>

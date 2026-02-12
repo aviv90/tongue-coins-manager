@@ -173,7 +173,8 @@ class GcsPhotoRepository(
                 difficulty = metadata.difficulty,
                 categories = metadata.categories,
                 version = finalVersion,
-                aspectRatio = aspectRatio
+                aspectRatio = aspectRatio,
+                supportedPlatforms = metadata.supportedPlatforms
             ).trimmed()
 
             if (commit) {
@@ -243,7 +244,8 @@ class GcsPhotoRepository(
                 difficulty = metadata.difficulty,
                 categories = metadata.categories,
                 imageUrl = "${baseMetadata.imageUrl.substringBefore("?v=")}?v=${baseMetadata.version + 1}",
-                version = baseMetadata.version + 1
+                version = baseMetadata.version + 1,
+                supportedPlatforms = metadata.supportedPlatforms
             ).trimmed()
 
             if (commit) {

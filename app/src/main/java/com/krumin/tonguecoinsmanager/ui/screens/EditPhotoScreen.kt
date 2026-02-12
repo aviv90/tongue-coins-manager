@@ -29,6 +29,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -61,6 +62,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import coil.compose.AsyncImage
 import com.krumin.tonguecoinsmanager.R
+import com.krumin.tonguecoinsmanager.domain.model.Platform
 import com.krumin.tonguecoinsmanager.ui.viewmodel.EditAction
 import com.krumin.tonguecoinsmanager.ui.viewmodel.EditPhotoViewModel
 import com.krumin.tonguecoinsmanager.util.FileUtils
@@ -83,6 +85,7 @@ fun EditPhotoScreen(
     var hint by remember { mutableStateOf("") }
     var difficulty by remember { mutableStateOf("1") }
     var categories by remember { mutableStateOf("") }
+    var supportedPlatforms by remember { mutableStateOf(listOf(Platform.ANDROID, Platform.IOS)) }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
     val successMessage = stringResource(R.string.success_categories_generated)
@@ -94,6 +97,7 @@ fun EditPhotoScreen(
             hint = it.hint
             difficulty = it.difficulty.toString()
             categories = it.categories
+            supportedPlatforms = it.supportedPlatforms
         }
     }
 
@@ -312,6 +316,7 @@ fun EditPhotoScreen(
                                     hint = hint,
                                     difficulty = difficulty.toIntOrNull() ?: 1,
                                     categories = categories,
+                                    supportedPlatforms = supportedPlatforms,
                                     imageFile = file
                                 )
                             )
@@ -604,6 +609,42 @@ fun EditPhotoScreen(
                         }
                     }
                 )
+
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_medium)))
+
+                Text(
+                    text = stringResource(R.string.supported_platforms_label),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_large))
+                ) {
+                    Platform.entries.forEach { platform ->
+                        val platformLabel = when (platform) {
+                            Platform.ANDROID -> stringResource(R.string.platform_android)
+                            Platform.IOS -> stringResource(R.string.platform_ios)
+                        }
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Checkbox(
+                                checked = supportedPlatforms.contains(platform),
+                                onCheckedChange = { checked ->
+                                    supportedPlatforms = if (checked) {
+                                        supportedPlatforms + platform
+                                    } else {
+                                        supportedPlatforms - platform
+                                    }
+                                }
+                            )
+                            Text(text = platformLabel)
+                        }
+                    }
+                }
 
                 if (photoId != null) {
                     Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_large)))
