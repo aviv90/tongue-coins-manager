@@ -25,6 +25,11 @@ object AppConfig {
         const val DOWNLOAD_FOLDER = "/TongueCoins"
     }
 
+    object Firestore {
+        const val COLLECTION_DAILY_RIDDLES = "daily_riddles"
+        const val DATABASE_ID = "tongue-coins"
+    }
+
     object Navigation {
         const val ROUTE_LIST = "list"
         const val ROUTE_EDIT_BASE = "edit"
@@ -35,5 +40,8 @@ object AppConfig {
         const val RESULT_ADD = "added"
         const val RESULT_EDIT = "edited"
         const val RESULT_DELETE = "deleted"
+
+        const val ROUTE_DAILY_RIDDLE = "daily_riddle"
     }
 }
+

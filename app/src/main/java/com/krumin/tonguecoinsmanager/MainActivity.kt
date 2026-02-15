@@ -67,5 +67,10 @@ fun TongueCoinsApp() {
                 }
             )
         }
+        composable(Screen.DailyRiddle.route) {
+            com.krumin.tonguecoinsmanager.ui.screens.DailyRiddleScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
     }
 }

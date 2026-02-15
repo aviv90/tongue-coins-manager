@@ -22,6 +22,8 @@ ksproom = "2.6.1"
 mockito = "5.2.0"
 mockitoKotlin = "5.2.1"
 coroutinesTest = "1.7.3"
+googleCloudFirestore = "3.18.0"
+grpcOkhttp = "1.65.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -51,7 +53,10 @@ kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 google-cloud-storage = { group = "com.google.cloud", name = "google-cloud-storage", version.ref = "gcs" }
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 firebase-ai = { group = "com.google.firebase", name = "firebase-ai" }
+google-cloud-firestore = { group = "com.google.cloud", name = "google-cloud-firestore", version.ref = "googleCloudFirestore" }
+grpc-okhttp = { group = "io.grpc", name = "grpc-okhttp", version.ref = "grpcOkhttp" }
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
+
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 

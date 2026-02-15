@@ -4,7 +4,11 @@ sealed class Screen(val route: String) {
     object List :
         Screen(com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Navigation.ROUTE_LIST)
 
+    object DailyRiddle :
+        Screen(com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Navigation.ROUTE_DAILY_RIDDLE)
+
     object Edit :
+
         Screen(com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Navigation.ROUTE_EDIT_FULL) {
         fun createRoute(photoId: String?): String {
             val base =

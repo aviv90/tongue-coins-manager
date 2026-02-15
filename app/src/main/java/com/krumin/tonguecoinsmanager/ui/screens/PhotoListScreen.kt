@@ -26,6 +26,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
@@ -236,11 +237,19 @@ fun PhotoListScreen(
                             )
                         },
                         navigationIcon = {
-                            IconButton(onClick = { isSearchActive = true }) {
-                                Icon(
-                                    imageVector = Icons.Default.Search,
-                                    contentDescription = stringResource(R.string.search_content_description)
-                                )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(onClick = { isSearchActive = true }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Search,
+                                        contentDescription = stringResource(R.string.search_content_description)
+                                    )
+                                }
+                                IconButton(onClick = { navController?.navigate(Screen.DailyRiddle.route) }) {
+                                    Icon(
+                                        imageVector = Icons.Default.CalendarToday,
+                                        contentDescription = "Daily Riddle"
+                                    )
+                                }
                             }
                         },
                         actions = {
@@ -251,6 +260,7 @@ fun PhotoListScreen(
                                 )
                             }
                         }
+
                     )
                 }
             },

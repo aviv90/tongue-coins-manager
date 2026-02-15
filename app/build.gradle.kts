@@ -82,13 +82,20 @@ dependencies {
 
     // Gemini
     implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.ai)
-
+    implementation(libs.firebase.ai) {
+        exclude(group = "com.google.protobuf", module = "protobuf-javalite")
+    }
+    // Firestore (Server SDK for Service Account support)
+    implementation(libs.google.cloud.firestore) {
+        exclude(group = "org.apache.httpcomponents", module = "httpclient")
+    }
+    implementation(libs.grpc.okhttp)
 
     // GCS
     implementation(libs.google.cloud.storage) {
         exclude(group = "org.apache.httpcomponents", module = "httpclient")
     }
+
 
     // Room
     implementation(libs.room.runtime)

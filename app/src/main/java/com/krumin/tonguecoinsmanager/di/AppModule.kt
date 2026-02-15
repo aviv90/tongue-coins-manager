@@ -47,8 +47,25 @@ val appModule = module {
         )
     }
 
+    single<com.krumin.tonguecoinsmanager.domain.repository.DailyRiddleRepository> {
+        com.krumin.tonguecoinsmanager.data.repository.DailyRiddleRepositoryImpl(androidContext())
+    }
+
+    // Daily Riddle Use Cases
+    single { com.krumin.tonguecoinsmanager.domain.usecase.dailyriddle.GetDailyRiddleUseCase(get()) }
+    single { com.krumin.tonguecoinsmanager.domain.usecase.dailyriddle.SetDailyRiddleUseCase(get()) }
+    single { com.krumin.tonguecoinsmanager.domain.usecase.dailyriddle.ResetDailyRiddleUseCase(get()) }
+
     // ViewModels
     viewModel { MainViewModel(get()) }
+    viewModel {
+        com.krumin.tonguecoinsmanager.ui.viewmodel.DailyRiddleViewModel(
+            get(),
+            get(),
+            get(),
+            get()
+        )
+    }
     viewModel { parameters ->
         EditPhotoViewModel(
             repository = get(),
@@ -58,3 +75,5 @@ val appModule = module {
         )
     }
 }
+
+
