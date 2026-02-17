@@ -22,10 +22,12 @@ import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -35,7 +37,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
@@ -98,10 +100,59 @@ fun DailyRiddleScreen(
         calendar.get(Calendar.DAY_OF_MONTH)
     )
 
+    var riddleToSet by remember { mutableStateOf<PhotoMetadata?>(null) }
+    var showResetDialog by remember { mutableStateOf(false) }
+
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+        if (riddleToSet != null) {
+            AlertDialog(
+                onDismissRequest = { riddleToSet = null },
+                title = { Text("הגדרת חידה יומית") },
+                text = { Text("האם אתה בטוח שברצונך להגדיר את החידה \"${riddleToSet?.title}\" כחידה היומית לתאריך ${state.selectedDate}?") },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            riddleToSet?.let { viewModel.onSetRiddle(it.id) }
+                            riddleToSet = null
+                        }
+                    ) {
+                        Text("אישור")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { riddleToSet = null }) {
+                        Text("ביטול")
+                    }
+                }
+            )
+        }
+
+        if (showResetDialog) {
+            AlertDialog(
+                onDismissRequest = { showResetDialog = false },
+                title = { Text("איפוס חידה יומית") },
+                text = { Text("האם אתה בטוח שברצונך למחוק את החידה היומית שהוגדרה ידנית? המערכת תבחר חידה באופן אוטומטי.") },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            viewModel.onResetRiddle()
+                            showResetDialog = false
+                        }
+                    ) {
+                        Text("אישור")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showResetDialog = false }) {
+                        Text("ביטול")
+                    }
+                }
+            )
+        }
+
         Scaffold(
             topBar = {
-                TopAppBar(
+                CenterAlignedTopAppBar(
                     title = { Text("ניהול חידה יומית") },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
@@ -115,7 +166,7 @@ fun DailyRiddleScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .padding(16.dp)
+                    .padding(top = 16.dp, start = 16.dp, end = 16.dp, bottom = 0.dp)
             ) {
                 // Date Selection
                 Row(
@@ -197,7 +248,7 @@ fun DailyRiddleScreen(
 
                             Spacer(modifier = Modifier.height(16.dp))
                             OutlinedButton(
-                                onClick = { viewModel.onResetRiddle() },
+                                onClick = { showResetDialog = true },
                                 colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
                             ) {
                                 Icon(Icons.Default.Close, contentDescription = null)
@@ -242,14 +293,15 @@ fun DailyRiddleScreen(
                 } else {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 16.dp)
                     ) {
                         items(filteredRiddles, key = { it.id }) { item ->
                             val isSelected = state.currentRiddle?.contentItemId == item.id
                             RiddleSelectionItem(
                                 item = item,
                                 isSelected = isSelected,
-                                onSet = { viewModel.onSetRiddle(item.id) },
+                                onSet = { riddleToSet = item },
                                 onSelect = { onSet -> onSet() }
                             )
                         }
