@@ -8,7 +8,6 @@ import com.krumin.tonguecoinsmanager.domain.model.Platform
 import com.krumin.tonguecoinsmanager.domain.repository.PhotoRepository
 import com.krumin.tonguecoinsmanager.domain.service.CategoryGenerator
 import com.krumin.tonguecoinsmanager.domain.service.ImageEditor
-import com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig
 import com.krumin.tonguecoinsmanager.util.UiText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -112,8 +111,8 @@ class EditPhotoViewModel(
 
                 // Save to temp file
                 val tempFile = File.createTempFile(
-                    AppConfig.Gcs.TEMP_PREFIX_AI,
-                    AppConfig.Gcs.EXTENSION_JPG
+                    TEMP_PREFIX_AI,
+                    EXTENSION_JPG
                 )
                 tempFile.writeBytes(editedBytes)
 
@@ -275,5 +274,10 @@ class EditPhotoViewModel(
                 }
             }
         }
+    }
+
+    companion object {
+        private const val TEMP_PREFIX_AI = "ai_edit_"
+        private const val EXTENSION_JPG = ".jpg"
     }
 }

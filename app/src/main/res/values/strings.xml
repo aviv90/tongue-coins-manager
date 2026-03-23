@@ -74,4 +74,45 @@
     <string name="undo_delete_message">האם ברצונך לבטל את המחיקה של תמונה זו?</string>
     <string name="undo_delete_confirm">כן, בטל מחיקה</string>
     <string name="scroll_to_bottom">גלול לתחתית</string>
+
+    <!-- Broadcast Screen -->
+    <string name="broadcast_title_screen">ניהול הודעה יומית</string>
+    <string name="broadcast_settings_header">הגדרות הודעה</string>
+    <string name="broadcast_field_id_label">מזהה הודעה (id)</string>
+    <string name="broadcast_error_id_required">מזהה חובה</string>
+    <string name="broadcast_id_hint">מומלץ פורמט: daily-YYYY-MM-DD</string>
+    <string name="broadcast_field_disabled_label">השבת הודעה (disabled)</string>
+    <string name="broadcast_content_header">תוכן ההודעה</string>
+    <string name="broadcast_field_title_label">כותרת</string>
+    <string name="broadcast_field_body_label">גוף ההודעה</string>
+    <string name="broadcast_body_supporting_text">תומך ב-Markdown בסיסי (למשל **הדגשה**)</string>
+    <string name="broadcast_field_image_url_label">URL תמונה (imageUrl)</string>
+    <string name="broadcast_image_url_placeholder">https://...</string>
+    <string name="broadcast_cta_header">כפתור פעולה (CTA)</string>
+    <string name="broadcast_field_cta_text_label">טקסט כפתור (ctaText)</string>
+    <string name="broadcast_field_cta_url_label">קישור כפתור (ctaUrl)</string>
+    <string name="broadcast_error_cta_mismatch">חובה למלא את שני השדות או להשאיר את שניהם ריקים</string>
+    <string name="broadcast_preview_header">תצוגה מקדימה (כפי שיופיע בדיאלוג)</string>
+    <string name="broadcast_preview_disabled_warning">ההודעה מושבתת</string>
+    <string name="broadcast_preview_close_button">סגור</string>
+    <string name="success_broadcast_saved">ההודעה נשמרה בהצלחה</string>
+
+    <!-- Daily Riddle Screen -->
+    <string name="riddle_dialog_title_set">הגדרת חידה יומית</string>
+    <string name="riddle_dialog_message_set">האם אתה בטוח שברצונך להגדיר את החידה "%1$s" כחידה היומית לתאריך %2$s?</string>
+    <string name="riddle_dialog_title_reset">איפוס חידה יומית</string>
+    <string name="riddle_dialog_message_reset">האם אתה בטוח שברצונך למחוק את החידה היומית שהוגדרה ידנית? המערכת תבחר חידה באופן אוטומטי.</string>
+    <string name="riddle_title_screen">ניהול חידה יומית</string>
+    <string name="riddle_date_label">תאריך: %1$s</string>
+    <string name="riddle_select_date_button">בחר תאריך</string>
+    <string name="riddle_current_header">החידה היומית הנוכחית</string>
+    <string name="riddle_manually_set_badge">הוגדר ידנית</string>
+    <string name="riddle_reset_auto_button">אפס לבחירה אוטומטית</string>
+    <string name="riddle_not_set_warning">לא הוגדרה חידה לתאריך זה (השרת יבחר אוטומטית)</string>
+    <string name="riddle_select_header">בחר חידה להגדרה</string>
+    <string name="riddle_search_placeholder">חפש לפי כותרת או מזהה...</string>
+    <string name="riddle_select_button">בחר</string>
+    <string name="riddle_selected_badge">נבחר</string>
+    <string name="riddle_button_ok">אישור</string>
+    <string name="riddle_details_not_found">מזהה: %1$s (פרטים לא נמצאו)</string>
 </resources>

@@ -23,23 +23,24 @@ data class BroadcastState(
     val error: String? = null,
     val saveSuccess: Boolean = false
 ) {
-    val isValid: Boolean get() {
-        if (id.trim().isEmpty()) return false
-        if (title.trim().isEmpty() && body.trim().isEmpty()) return false
-        
-        val hasCtaText = !ctaText.isNullOrBlank()
-        val hasCtaUrl = !ctaUrl.isNullOrBlank()
-        if (hasCtaText != hasCtaUrl) return false // Must be both or none
-        
-        if (!imageUrl.isNullOrBlank()) {
-            if (!imageUrl.startsWith("https://") && !imageUrl.startsWith("http://")) return false
+    val isValid: Boolean
+        get() {
+            if (id.trim().isEmpty()) return false
+            if (title.trim().isEmpty() && body.trim().isEmpty()) return false
+
+            val hasCtaText = !ctaText.isNullOrBlank()
+            val hasCtaUrl = !ctaUrl.isNullOrBlank()
+            if (hasCtaText != hasCtaUrl) return false // Must be both or none
+
+            if (!imageUrl.isNullOrBlank()) {
+                if (!imageUrl.startsWith("https://") && !imageUrl.startsWith("http://")) return false
+            }
+            if (!ctaUrl.isNullOrBlank()) {
+                if (!ctaUrl.startsWith("https://") && !ctaUrl.startsWith("http://")) return false
+            }
+
+            return true
         }
-        if (!ctaUrl.isNullOrBlank()) {
-            if (!ctaUrl.startsWith("https://") && !ctaUrl.startsWith("http://")) return false
-        }
-        
-        return true
-    }
 }
 
 class BroadcastViewModel(
@@ -53,13 +54,22 @@ class BroadcastViewModel(
     private val _ctaText = MutableStateFlow<String?>(null)
     private val _ctaUrl = MutableStateFlow<String?>(null)
     private val _disabled = MutableStateFlow(false)
-    
+
     private val _isLoading = MutableStateFlow(false)
     private val _error = MutableStateFlow<String?>(null)
     private val _saveSuccess = MutableStateFlow(false)
 
     val state: StateFlow<BroadcastState> = combine(
-        _id, _title, _body, _imageUrl, _ctaText, _ctaUrl, _disabled, _isLoading, _error, _saveSuccess
+        _id,
+        _title,
+        _body,
+        _imageUrl,
+        _ctaText,
+        _ctaUrl,
+        _disabled,
+        _isLoading,
+        _error,
+        _saveSuccess
     ) { args ->
         BroadcastState(
             id = args[0] as String,
@@ -104,13 +114,33 @@ class BroadcastViewModel(
         }
     }
 
-    fun onIdChanged(value: String) { _id.value = value }
-    fun onTitleChanged(value: String) { _title.value = value }
-    fun onBodyChanged(value: String) { _body.value = value }
-    fun onImageUrlChanged(value: String?) { _imageUrl.value = if (value.isNullOrBlank()) null else value }
-    fun onCtaTextChanged(value: String?) { _ctaText.value = if (value.isNullOrBlank()) null else value }
-    fun onCtaUrlChanged(value: String?) { _ctaUrl.value = if (value.isNullOrBlank()) null else value }
-    fun onDisabledChanged(value: Boolean) { _disabled.value = value }
+    fun onIdChanged(value: String) {
+        _id.value = value
+    }
+
+    fun onTitleChanged(value: String) {
+        _title.value = value
+    }
+
+    fun onBodyChanged(value: String) {
+        _body.value = value
+    }
+
+    fun onImageUrlChanged(value: String?) {
+        _imageUrl.value = if (value.isNullOrBlank()) null else value
+    }
+
+    fun onCtaTextChanged(value: String?) {
+        _ctaText.value = if (value.isNullOrBlank()) null else value
+    }
+
+    fun onCtaUrlChanged(value: String?) {
+        _ctaUrl.value = if (value.isNullOrBlank()) null else value
+    }
+
+    fun onDisabledChanged(value: Boolean) {
+        _disabled.value = value
+    }
 
     fun onSave() {
         viewModelScope.launch {
@@ -119,7 +149,7 @@ class BroadcastViewModel(
                 _error.value = "ביטול: נתונים לא תקינים. ודא שמזהה לא ריק, יש תוכן, ו-CTA תקין."
                 return@launch
             }
-            
+
             _isLoading.value = true
             _saveSuccess.value = false
             try {
@@ -143,6 +173,11 @@ class BroadcastViewModel(
         }
     }
 
-    fun clearError() { _error.value = null }
-    fun clearSaveSuccess() { _saveSuccess.value = false }
+    fun clearError() {
+        _error.value = null
+    }
+
+    fun clearSaveSuccess() {
+        _saveSuccess.value = false
+    }
 }

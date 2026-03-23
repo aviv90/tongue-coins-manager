@@ -32,19 +32,5 @@ object AppConfig {
         const val DOCUMENT_CURRENT = "current"
     }
 
-    object Navigation {
-        const val ROUTE_LIST = "list"
-        const val ROUTE_EDIT_BASE = "edit"
-        const val ARG_ID = "id"
-        const val ROUTE_EDIT_FULL = "$ROUTE_EDIT_BASE?$ARG_ID={$ARG_ID}"
-
-        const val KEY_RESULT = "action_result"
-        const val RESULT_ADD = "added"
-        const val RESULT_EDIT = "edited"
-        const val RESULT_DELETE = "deleted"
-
-        const val ROUTE_DAILY_RIDDLE = "daily_riddle"
-        const val ROUTE_DAILY_BROADCAST = "daily_broadcast"
-    }
 }
 

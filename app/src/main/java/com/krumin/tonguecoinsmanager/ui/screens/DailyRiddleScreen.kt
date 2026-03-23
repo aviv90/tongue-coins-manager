@@ -53,9 +53,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.krumin.tonguecoinsmanager.R
 import com.krumin.tonguecoinsmanager.domain.model.PhotoMetadata
 import com.krumin.tonguecoinsmanager.ui.viewmodel.DailyRiddleViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -107,8 +109,16 @@ fun DailyRiddleScreen(
         if (riddleToSet != null) {
             AlertDialog(
                 onDismissRequest = { riddleToSet = null },
-                title = { Text("הגדרת חידה יומית") },
-                text = { Text("האם אתה בטוח שברצונך להגדיר את החידה \"${riddleToSet?.title}\" כחידה היומית לתאריך ${state.selectedDate}?") },
+                title = { Text(stringResource(R.string.riddle_dialog_title_set)) },
+                text = {
+                    Text(
+                        stringResource(
+                            R.string.riddle_dialog_message_set,
+                            riddleToSet?.title ?: "",
+                            state.selectedDate
+                        )
+                    )
+                },
                 confirmButton = {
                     TextButton(
                         onClick = {
@@ -116,12 +126,12 @@ fun DailyRiddleScreen(
                             riddleToSet = null
                         }
                     ) {
-                        Text("אישור")
+                        Text(stringResource(R.string.riddle_button_ok))
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { riddleToSet = null }) {
-                        Text("ביטול")
+                        Text(stringResource(R.string.cancel_button))
                     }
                 }
             )
@@ -130,8 +140,8 @@ fun DailyRiddleScreen(
         if (showResetDialog) {
             AlertDialog(
                 onDismissRequest = { showResetDialog = false },
-                title = { Text("איפוס חידה יומית") },
-                text = { Text("האם אתה בטוח שברצונך למחוק את החידה היומית שהוגדרה ידנית? המערכת תבחר חידה באופן אוטומטי.") },
+                title = { Text(stringResource(R.string.riddle_dialog_title_reset)) },
+                text = { Text(stringResource(R.string.riddle_dialog_message_reset)) },
                 confirmButton = {
                     TextButton(
                         onClick = {
@@ -139,12 +149,12 @@ fun DailyRiddleScreen(
                             showResetDialog = false
                         }
                     ) {
-                        Text("אישור")
+                        Text(stringResource(R.string.riddle_button_ok))
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showResetDialog = false }) {
-                        Text("ביטול")
+                        Text(stringResource(R.string.cancel_button))
                     }
                 }
             )
@@ -153,10 +163,13 @@ fun DailyRiddleScreen(
         Scaffold(
             topBar = {
                 CenterAlignedTopAppBar(
-                    title = { Text("ניהול חידה יומית") },
+                    title = { Text(stringResource(R.string.riddle_title_screen)) },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "חזרה")
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.back_content_description)
+                            )
                         }
                     }
                 )
@@ -166,7 +179,12 @@ fun DailyRiddleScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .padding(top = 16.dp, start = 16.dp, end = 16.dp, bottom = 0.dp)
+                    .padding(
+                        top = dimensionResource(R.dimen.spacing_large),
+                        start = dimensionResource(R.dimen.spacing_large),
+                        end = dimensionResource(R.dimen.spacing_large),
+                        bottom = dimensionResource(R.dimen.spacing_tiny)
+                    )
             ) {
                 // Date Selection
                 Row(
@@ -175,17 +193,23 @@ fun DailyRiddleScreen(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "תאריך: ${state.selectedDate}",
+                        text = stringResource(R.string.riddle_date_label, state.selectedDate),
                         style = MaterialTheme.typography.titleMedium
                     )
                     Button(onClick = { datePickerDialog.show() }) {
                         Icon(Icons.Default.CalendarToday, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("בחר תאריך")
+                        Spacer(modifier = Modifier.width(dimensionResource(R.dimen.spacing_medium)))
+                        Text(stringResource(R.string.riddle_select_date_button))
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(
+                    modifier = Modifier.height(
+                        dimensionResource(R.dimen.spacing_large) + dimensionResource(
+                            R.dimen.spacing_medium
+                        )
+                    )
+                )
 
                 // Current Riddle Display
                 Card(
@@ -197,13 +221,13 @@ fun DailyRiddleScreen(
                             MaterialTheme.colorScheme.surfaceVariant
                     )
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
+                    Column(modifier = Modifier.padding(dimensionResource(R.dimen.spacing_large))) {
                         Text(
-                            text = "החידה היומית הנוכחית",
+                            text = stringResource(R.string.riddle_current_header),
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_medium)))
 
                         if (state.currentRiddle != null) {
                             val currentRiddleDetails =
@@ -215,11 +239,11 @@ fun DailyRiddleScreen(
                                         model = currentRiddleDetails.imageUrl,
                                         contentDescription = null,
                                         modifier = Modifier
-                                            .size(60.dp)
+                                            .size(dimensionResource(R.dimen.riddle_image_size))
                                             .background(Color.Gray),
                                         contentScale = ContentScale.Crop
                                     )
-                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Spacer(modifier = Modifier.width(dimensionResource(R.dimen.spacing_normal)))
                                     Column {
                                         Text(
                                             text = currentRiddleDetails.title,
@@ -232,7 +256,7 @@ fun DailyRiddleScreen(
                                         )
                                         if (state.currentRiddle!!.manuallySet) {
                                             Text(
-                                                text = "הוגדר ידנית",
+                                                text = stringResource(R.string.riddle_manually_set_badge),
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = MaterialTheme.colorScheme.primary
                                             )
@@ -241,23 +265,26 @@ fun DailyRiddleScreen(
                                 }
                             } else {
                                 Text(
-                                    text = "מזהה: ${state.currentRiddle!!.contentItemId} (פרטים לא נמצאו)",
+                                    text = stringResource(
+                                        R.string.riddle_details_not_found,
+                                        state.currentRiddle!!.contentItemId
+                                    ),
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                             }
 
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_large)))
                             OutlinedButton(
                                 onClick = { showResetDialog = true },
                                 colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
                             ) {
                                 Icon(Icons.Default.Close, contentDescription = null)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("אפס לבחירה אוטומטית")
+                                Spacer(modifier = Modifier.width(dimensionResource(R.dimen.spacing_medium)))
+                                Text(stringResource(R.string.riddle_reset_auto_button))
                             }
                         } else {
                             Text(
-                                text = "לא הוגדרה חידה לתאריך זה (השרת יבחר אוטומטית)",
+                                text = stringResource(R.string.riddle_not_set_warning),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -265,25 +292,31 @@ fun DailyRiddleScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(
+                    modifier = Modifier.height(
+                        dimensionResource(R.dimen.spacing_large) + dimensionResource(
+                            R.dimen.spacing_medium
+                        )
+                    )
+                )
 
                 Text(
-                    text = "בחר חידה להגדרה",
+                    text = stringResource(R.string.riddle_select_header),
                     style = MaterialTheme.typography.titleMedium
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_medium)))
 
                 // Search Bar
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("חפש לפי כותרת או מזהה...") },
+                    placeholder = { Text(stringResource(R.string.riddle_search_placeholder)) },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     singleLine = true
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_medium)))
 
                 // Dictionary List
                 if (state.isLoading) {
@@ -293,8 +326,12 @@ fun DailyRiddleScreen(
                 } else {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 16.dp)
+                        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_medium)),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                            bottom = dimensionResource(
+                                R.dimen.spacing_large
+                            )
+                        )
                     ) {
                         items(filteredRiddles, key = { it.id }) { item ->
                             val isSelected = state.currentRiddle?.contentItemId == item.id
@@ -326,11 +363,11 @@ fun RiddleSelectionItem(
         colors = CardDefaults.cardColors(
             containerColor = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(R.dimen.surface_elevation_high) / 6) // Approx 2dp
     ) {
         Row(
             modifier = Modifier
-                .padding(8.dp)
+                .padding(dimensionResource(R.dimen.spacing_medium))
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -338,11 +375,11 @@ fun RiddleSelectionItem(
                 model = item.imageUrl,
                 contentDescription = null,
                 modifier = Modifier
-                    .size(50.dp)
+                    .size(dimensionResource(R.dimen.riddle_item_image_size))
                     .background(Color.Gray),
                 contentScale = ContentScale.Crop
             )
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(dimensionResource(R.dimen.spacing_normal)))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = item.title,
@@ -358,12 +395,12 @@ fun RiddleSelectionItem(
             if (isSelected) {
                 Icon(
                     imageVector = Icons.Default.Check,
-                    contentDescription = "נבחר",
+                    contentDescription = stringResource(R.string.riddle_selected_badge),
                     tint = MaterialTheme.colorScheme.primary
                 )
             } else {
                 Button(onClick = onSet) {
-                    Text("בחר")
+                    Text(stringResource(R.string.riddle_select_button))
                 }
             }
         }

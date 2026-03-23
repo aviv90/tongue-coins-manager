@@ -1,38 +1,23 @@
 package com.krumin.tonguecoinsmanager.ui.navigation
 
-import com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig
-
 sealed class Screen(val route: String) {
-    object List :
-        Screen(AppConfig.Navigation.ROUTE_LIST)
+    object List : Screen("list")
 
-    object DailyRiddle :
-        Screen(AppConfig.Navigation.ROUTE_DAILY_RIDDLE)
-    
-    object DailyBroadcast :
-        Screen(AppConfig.Navigation.ROUTE_DAILY_BROADCAST)
+    object DailyRiddle : Screen("daily_riddle")
 
-    object Edit :
+    object DailyBroadcast : Screen("daily_broadcast")
 
-        Screen(AppConfig.Navigation.ROUTE_EDIT_FULL) {
+    object Edit : Screen("edit?id={id}") {
         fun createRoute(photoId: String?): String {
-            val base =
-                AppConfig.Navigation.ROUTE_EDIT_BASE
-            val arg = AppConfig.Navigation.ARG_ID
-            return if (photoId != null) "$base?$arg=$photoId" else base
+            return if (photoId != null) "edit?id=$photoId" else "edit"
         }
     }
 
     companion object {
-        const val ARG_ID =
-            AppConfig.Navigation.ARG_ID
-        const val RESULT_KEY =
-            AppConfig.Navigation.KEY_RESULT
-        const val RESULT_ADD =
-            AppConfig.Navigation.RESULT_ADD
-        const val RESULT_EDIT =
-            AppConfig.Navigation.RESULT_EDIT
-        const val RESULT_DELETE =
-            AppConfig.Navigation.RESULT_DELETE
+        const val ARG_ID = "id"
+        const val RESULT_KEY = "action_result"
+        const val RESULT_ADD = "added"
+        const val RESULT_EDIT = "edited"
+        const val RESULT_DELETE = "deleted"
     }
 }

@@ -65,7 +65,6 @@ import com.krumin.tonguecoinsmanager.R
 import com.krumin.tonguecoinsmanager.domain.model.Platform
 import com.krumin.tonguecoinsmanager.ui.viewmodel.EditAction
 import com.krumin.tonguecoinsmanager.ui.viewmodel.EditPhotoViewModel
-import com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig
 import com.krumin.tonguecoinsmanager.util.FileUtils
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -120,7 +119,7 @@ fun EditPhotoScreen(
         state.generatedCategories?.let { genCats ->
             if (genCats.isNotEmpty()) {
                 categories =
-                    genCats.joinToString(AppConfig.Gcs.SEPARATOR_COMMA)
+                    genCats.joinToString(", ")
                 viewModel.handleAction(EditAction.ClearGeneratedCategories)
                 snackbarHostState.showSnackbar(successMessage)
             }
@@ -452,7 +451,7 @@ fun EditPhotoScreen(
                             contentScale = ContentScale.Fit
                         )
                     } else {
-                        OutlinedButton(onClick = { launcher.launch(AppConfig.Gcs.MIME_TYPE_IMAGE) }) {
+                        OutlinedButton(onClick = { launcher.launch("image/*") }) {
                             Icon(imageVector = Icons.Default.Image, contentDescription = null)
                             Spacer(Modifier.width(dimensionResource(R.dimen.spacing_medium)))
                             Text(stringResource(R.string.select_photo))
@@ -462,7 +461,7 @@ fun EditPhotoScreen(
 
                 if (selectedImageUri != null || state.photo?.imageUrl != null) {
                     TextButton(
-                        onClick = { launcher.launch(AppConfig.Gcs.MIME_TYPE_IMAGE) },
+                        onClick = { launcher.launch("image/*") },
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     ) {
                         Text(stringResource(R.string.change_photo))

@@ -46,9 +46,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.krumin.tonguecoinsmanager.R
 import com.krumin.tonguecoinsmanager.ui.viewmodel.BroadcastViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -63,7 +65,7 @@ fun BroadcastScreen(
 
     LaunchedEffect(state.saveSuccess) {
         if (state.saveSuccess) {
-            snackbarHostState.showSnackbar("ההודעה נשמרה בהצלחה")
+            snackbarHostState.showSnackbar(context.getString(R.string.success_broadcast_saved))
             viewModel.clearSaveSuccess()
         }
     }
@@ -75,15 +77,20 @@ fun BroadcastScreen(
         }
     }
 
+    val context = androidx.compose.ui.platform.LocalContext.current
+
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         Scaffold(
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 CenterAlignedTopAppBar(
-                    title = { Text("ניהול הודעה יומית") },
+                    title = { Text(stringResource(R.string.broadcast_title_screen)) },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "חזרה")
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.back_content_description)
+                            )
                         }
                     },
                     actions = {
@@ -92,9 +99,18 @@ fun BroadcastScreen(
                             enabled = !state.isLoading && state.isValid
                         ) {
                             if (state.isLoading) {
-                                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(
+                                        dimensionResource(
+                                            R.dimen.progress_size_small
+                                        )
+                                    )
+                                )
                             } else {
-                                Icon(Icons.Default.Check, contentDescription = "שמור")
+                                Icon(
+                                    Icons.Default.Check,
+                                    contentDescription = stringResource(R.string.save_button)
+                                )
                             }
                         }
                     }
@@ -105,25 +121,31 @@ fun BroadcastScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .padding(16.dp)
+                    .padding(dimensionResource(R.dimen.spacing_large))
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_large))
             ) {
                 // Settings Section
-                Text("הגדרות הודעה", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    stringResource(R.string.broadcast_settings_header),
+                    style = MaterialTheme.typography.titleMedium
+                )
 
                 OutlinedTextField(
                     value = state.id,
                     onValueChange = viewModel::onIdChanged,
-                    label = { Text("מזהה הודעה (id)") },
+                    label = { Text(stringResource(R.string.broadcast_field_id_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     isError = state.id.trim().isEmpty(),
                     supportingText = {
                         if (state.id.trim().isEmpty()) {
-                            Text("מזהה חובה", color = MaterialTheme.colorScheme.error)
+                            Text(
+                                stringResource(R.string.broadcast_error_id_required),
+                                color = MaterialTheme.colorScheme.error
+                            )
                         } else {
-                            Text("מומלץ פורמט: daily-YYYY-MM-DD")
+                            Text(stringResource(R.string.broadcast_id_hint))
                         }
                     }
                 )
@@ -133,7 +155,7 @@ fun BroadcastScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("השבת הודעה (disabled)")
+                    Text(stringResource(R.string.broadcast_field_disabled_label))
                     Switch(
                         checked = state.disabled,
                         onValueChange = viewModel::onDisabledChanged
@@ -143,12 +165,15 @@ fun BroadcastScreen(
                 Divider()
 
                 // Content Section
-                Text("תוכן ההודעה", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    stringResource(R.string.broadcast_content_header),
+                    style = MaterialTheme.typography.titleMedium
+                )
 
                 OutlinedTextField(
                     value = state.title,
                     onValueChange = viewModel::onTitleChanged,
-                    label = { Text("כותרת") },
+                    label = { Text(stringResource(R.string.broadcast_field_title_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -156,14 +181,18 @@ fun BroadcastScreen(
                 OutlinedTextField(
                     value = state.body,
                     onValueChange = viewModel::onBodyChanged,
-                    label = { Text("גוף ההודעה") },
+                    label = { Text(stringResource(R.string.broadcast_field_body_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 3,
                     supportingText = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Info, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("תומך ב-Markdown בסיסי (למשל **הדגשה**)")
+                            Icon(
+                                Icons.Default.Info,
+                                contentDescription = null,
+                                modifier = Modifier.size(dimensionResource(R.dimen.icon_size_tiny))
+                            )
+                            Spacer(modifier = Modifier.width(dimensionResource(R.dimen.spacing_small)))
+                            Text(stringResource(R.string.broadcast_body_supporting_text))
                         }
                     }
                 )
@@ -171,21 +200,24 @@ fun BroadcastScreen(
                 OutlinedTextField(
                     value = state.imageUrl ?: "",
                     onValueChange = { viewModel.onImageUrlChanged(it.ifBlank { null }) },
-                    label = { Text("URL תמונה (imageUrl)") },
+                    label = { Text(stringResource(R.string.broadcast_field_image_url_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    placeholder = { Text("https://...") }
+                    placeholder = { Text(stringResource(R.string.broadcast_image_url_placeholder)) }
                 )
 
                 Divider()
 
                 // CTA Section
-                Text("כפתור פעולה (CTA)", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    stringResource(R.string.broadcast_cta_header),
+                    style = MaterialTheme.typography.titleMedium
+                )
 
                 OutlinedTextField(
                     value = state.ctaText ?: "",
                     onValueChange = { viewModel.onCtaTextChanged(it.ifBlank { null }) },
-                    label = { Text("טקסט כפתור (ctaText)") },
+                    label = { Text(stringResource(R.string.broadcast_field_cta_text_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     isError = (!state.ctaText.isNullOrBlank() && state.ctaUrl.isNullOrBlank()) || (state.ctaText.isNullOrBlank() && !state.ctaUrl.isNullOrBlank())
@@ -194,44 +226,53 @@ fun BroadcastScreen(
                 OutlinedTextField(
                     value = state.ctaUrl ?: "",
                     onValueChange = { viewModel.onCtaUrlChanged(it.ifBlank { null }) },
-                    label = { Text("קישור כפתור (ctaUrl)") },
+                    label = { Text(stringResource(R.string.broadcast_field_cta_url_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    placeholder = { Text("https://...") },
+                    placeholder = { Text(stringResource(R.string.broadcast_image_url_placeholder)) },
                     isError = (!state.ctaText.isNullOrBlank() && state.ctaUrl.isNullOrBlank()) || (state.ctaText.isNullOrBlank() && !state.ctaUrl.isNullOrBlank()),
                     supportingText = {
                         if ((!state.ctaText.isNullOrBlank() && state.ctaUrl.isNullOrBlank()) || (state.ctaText.isNullOrBlank() && !state.ctaUrl.isNullOrBlank())) {
-                            Text("חובה למלא את שני השדות או להשאיר את שניהם ריקים", color = MaterialTheme.colorScheme.error)
+                            Text(
+                                stringResource(R.string.broadcast_error_cta_mismatch),
+                                color = MaterialTheme.colorScheme.error
+                            )
                         }
                     }
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_large)))
 
                 // Preview Section
-                Text("תצוגה מקדימה (כפי שיופיע בדיאלוג)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(
+                    stringResource(R.string.broadcast_preview_header),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
 
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                        .padding(bottom = dimensionResource(R.dimen.spacing_large)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(R.dimen.surface_elevation)),
                     colors = CardDefaults.cardColors(
-                        containerColor = if (state.disabled) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surface
+                        containerColor = if (state.disabled) MaterialTheme.colorScheme.surfaceVariant.copy(
+                            alpha = 0.5f
+                        ) else MaterialTheme.colorScheme.surface
                     )
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp),
+                        modifier = Modifier.padding(dimensionResource(R.dimen.spacing_large)),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         if (state.disabled) {
                             Text(
-                                "ההודעה מושבתת",
+                                stringResource(R.string.broadcast_preview_disabled_warning),
                                 color = MaterialTheme.colorScheme.error,
                                 style = MaterialTheme.typography.labelSmall,
                                 modifier = Modifier.align(Alignment.Start)
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_medium)))
                         }
 
                         if (!state.imageUrl.isNullOrBlank()) {
@@ -240,11 +281,11 @@ fun BroadcastScreen(
                                 contentDescription = null,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(150.dp)
+                                    .height(dimensionResource(R.dimen.broadcast_preview_height))
                                     .background(Color.Gray),
                                 contentScale = ContentScale.Crop
                             )
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_normal)))
                         }
 
                         if (state.title.isNotBlank()) {
@@ -254,7 +295,7 @@ fun BroadcastScreen(
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.align(Alignment.Start)
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_medium)))
                         }
 
                         if (state.body.isNotBlank()) {
@@ -263,7 +304,7 @@ fun BroadcastScreen(
                                 style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier.align(Alignment.Start)
                             )
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_large)))
                         }
 
                         Row(
@@ -274,7 +315,7 @@ fun BroadcastScreen(
                                 Button(onClick = { /* Do nothing in preview */ }) {
                                     Text(state.ctaText)
                                 }
-                                Spacer(modifier = Modifier.width(8.dp))
+                                Spacer(modifier = Modifier.width(dimensionResource(R.dimen.spacing_medium)))
                             }
                             Button(
                                 onClick = { /* Do nothing in preview */ },
@@ -283,7 +324,7 @@ fun BroadcastScreen(
                                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             ) {
-                                Text("סגור")
+                                Text(stringResource(R.string.broadcast_preview_close_button))
                             }
                         }
                     }
