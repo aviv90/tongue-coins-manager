@@ -250,6 +250,12 @@ fun PhotoListScreen(
                                         contentDescription = "Daily Riddle"
                                     )
                                 }
+                                IconButton(onClick = { navController?.navigate(Screen.DailyBroadcast.route) }) {
+                                    Icon(
+                                        imageVector = androidx.compose.material.icons.automirrored.filled.Announcement, // Or Campaign
+                                        contentDescription = "Daily Broadcast"
+                                    )
+                                }
                             }
                         },
                         actions = {

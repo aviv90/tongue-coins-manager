@@ -12,6 +12,18 @@ import com.krumin.tonguecoinsmanager.ui.viewmodel.MainViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
+import com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig
+import com.krumin.tonguecoinsmanager.domain.service.ImageEditor
+import com.krumin.tonguecoinsmanager.data.service.GeminiImageEditor
+import com.krumin.tonguecoinsmanager.domain.repository.DailyRiddleRepository
+import com.krumin.tonguecoinsmanager.data.repository.DailyRiddleRepositoryImpl
+import com.krumin.tonguecoinsmanager.domain.repository.BroadcastRepository
+import com.krumin.tonguecoinsmanager.data.repository.BroadcastRepositoryImpl
+import com.krumin.tonguecoinsmanager.domain.usecase.dailyriddle.GetDailyRiddleUseCase
+import com.krumin.tonguecoinsmanager.domain.usecase.dailyriddle.SetDailyRiddleUseCase
+import com.krumin.tonguecoinsmanager.domain.usecase.dailyriddle.ResetDailyRiddleUseCase
+import com.krumin.tonguecoinsmanager.ui.viewmodel.BroadcastViewModel
+import com.krumin.tonguecoinsmanager.ui.viewmodel.DailyRiddleViewModel
 
 val appModule = module {
     // Database
@@ -30,8 +42,8 @@ val appModule = module {
         GcsPhotoRepository(
             context = androidContext(),
             pendingChangeDao = get(),
-            privateBucketName = com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.PRIVATE_BUCKET,
-            publicBucketName = com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.PUBLIC_BUCKET
+            privateBucketName = AppConfig.Gcs.PRIVATE_BUCKET,
+            publicBucketName = AppConfig.Gcs.PUBLIC_BUCKET
         )
     }
 
@@ -40,26 +52,32 @@ val appModule = module {
         GeminiCategoryGenerator(androidContext(), BuildConfig.GEMINI_API_KEY)
     }
 
-    single<com.krumin.tonguecoinsmanager.domain.service.ImageEditor> {
-        com.krumin.tonguecoinsmanager.data.service.GeminiImageEditor(
+    single<ImageEditor> {
+        GeminiImageEditor(
             androidContext(),
             BuildConfig.GEMINI_API_KEY
         )
     }
 
-    single<com.krumin.tonguecoinsmanager.domain.repository.DailyRiddleRepository> {
-        com.krumin.tonguecoinsmanager.data.repository.DailyRiddleRepositoryImpl(androidContext())
+    single<DailyRiddleRepository> {
+        DailyRiddleRepositoryImpl(androidContext())
+    }
+
+    // Broadcast Use Cases (none needed if accessing repo directly, but maintaining pattern to inject repo)
+    single<BroadcastRepository> {
+        BroadcastRepositoryImpl(androidContext())
     }
 
     // Daily Riddle Use Cases
-    single { com.krumin.tonguecoinsmanager.domain.usecase.dailyriddle.GetDailyRiddleUseCase(get()) }
-    single { com.krumin.tonguecoinsmanager.domain.usecase.dailyriddle.SetDailyRiddleUseCase(get()) }
-    single { com.krumin.tonguecoinsmanager.domain.usecase.dailyriddle.ResetDailyRiddleUseCase(get()) }
+    single { GetDailyRiddleUseCase(get()) }
+    single { SetDailyRiddleUseCase(get()) }
+    single { ResetDailyRiddleUseCase(get()) }
 
     // ViewModels
     viewModel { MainViewModel(get()) }
+    viewModel { BroadcastViewModel(get()) }
     viewModel {
-        com.krumin.tonguecoinsmanager.ui.viewmodel.DailyRiddleViewModel(
+        DailyRiddleViewModel(
             get(),
             get(),
             get(),

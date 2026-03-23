@@ -15,6 +15,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.krumin.tonguecoinsmanager.ui.navigation.Screen
+import com.krumin.tonguecoinsmanager.ui.screens.BroadcastScreen
+import com.krumin.tonguecoinsmanager.ui.screens.DailyRiddleScreen
 import com.krumin.tonguecoinsmanager.ui.screens.EditPhotoScreen
 import com.krumin.tonguecoinsmanager.ui.screens.PhotoListScreen
 import com.krumin.tonguecoinsmanager.ui.theme.TongueCoinsManagerTheme
@@ -68,7 +70,12 @@ fun TongueCoinsApp() {
             )
         }
         composable(Screen.DailyRiddle.route) {
-            com.krumin.tonguecoinsmanager.ui.screens.DailyRiddleScreen(
+            DailyRiddleScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable(Screen.DailyBroadcast.route) {
+            BroadcastScreen(
                 onBack = { navController.popBackStack() }
             )
         }

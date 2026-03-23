@@ -8,6 +8,7 @@ import com.krumin.tonguecoinsmanager.domain.model.Platform
 import com.krumin.tonguecoinsmanager.domain.repository.PhotoRepository
 import com.krumin.tonguecoinsmanager.domain.service.CategoryGenerator
 import com.krumin.tonguecoinsmanager.domain.service.ImageEditor
+import com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig
 import com.krumin.tonguecoinsmanager.util.UiText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -111,8 +112,8 @@ class EditPhotoViewModel(
 
                 // Save to temp file
                 val tempFile = File.createTempFile(
-                    com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.TEMP_PREFIX_AI,
-                    com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.EXTENSION_JPG
+                    AppConfig.Gcs.TEMP_PREFIX_AI,
+                    AppConfig.Gcs.EXTENSION_JPG
                 )
                 tempFile.writeBytes(editedBytes)
 
@@ -183,9 +184,9 @@ class EditPhotoViewModel(
                 val pendingChange = pendingChanges.find { it.id == id }
 
                 val photo = when (pendingChange) {
-                    is com.krumin.tonguecoinsmanager.domain.model.PendingChange.Add -> pendingChange.metadata
-                    is com.krumin.tonguecoinsmanager.domain.model.PendingChange.Edit -> pendingChange.metadata
-                    is com.krumin.tonguecoinsmanager.domain.model.PendingChange.Delete -> {
+                    is PendingChange.Add -> pendingChange.metadata
+                    is PendingChange.Edit -> pendingChange.metadata
+                    is PendingChange.Delete -> {
                         // If marked for deletion, we might still show it but maybe with a warning,
                         // or treat it as not found. For edit screen, showing the metadata is safer.
                         pendingChange.metadata

@@ -2,6 +2,7 @@ package com.krumin.tonguecoinsmanager.util
 
 import android.content.Context
 import android.net.Uri
+import com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig
 import java.io.File
 import java.io.FileOutputStream
 
@@ -10,8 +11,8 @@ object FileUtils {
         return try {
             val inputStream = context.contentResolver.openInputStream(uri)
             val tempFile = File.createTempFile(
-                com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.TEMP_PREFIX_UPLOAD,
-                com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.EXTENSION_JPG,
+                AppConfig.Gcs.TEMP_PREFIX_UPLOAD,
+                AppConfig.Gcs.EXTENSION_JPG,
                 context.cacheDir
             )
             val outputStream = FileOutputStream(tempFile)

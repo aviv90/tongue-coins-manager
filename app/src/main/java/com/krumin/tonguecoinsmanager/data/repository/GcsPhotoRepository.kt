@@ -11,6 +11,7 @@ import com.google.cloud.storage.BlobId
 import com.google.cloud.storage.BlobInfo
 import com.google.cloud.storage.Storage
 import com.google.cloud.storage.StorageOptions
+import com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig
 import com.krumin.tonguecoinsmanager.data.local.ChangeType
 import com.krumin.tonguecoinsmanager.data.local.PendingChangeDao
 import com.krumin.tonguecoinsmanager.data.local.PendingChangeEntity
@@ -393,7 +394,7 @@ class GcsPhotoRepository(
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     put(
                         MediaStore.MediaColumns.RELATIVE_PATH,
-                        Environment.DIRECTORY_PICTURES + com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.DOWNLOAD_FOLDER
+                        Environment.DIRECTORY_PICTURES + AppConfig.Gcs.DOWNLOAD_FOLDER
                     )
                     put(MediaStore.MediaColumns.IS_PENDING, 1)
                 }
@@ -425,19 +426,19 @@ class GcsPhotoRepository(
 
     companion object {
         private const val DEFAULT_JSON_FILE =
-            com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.DEFAULT_JSON_FILE
+            AppConfig.Gcs.DEFAULT_JSON_FILE
         private const val DEFAULT_KEY_FILE =
-            com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.DEFAULT_KEY_FILE
+            AppConfig.Gcs.DEFAULT_KEY_FILE
         private const val GCS_BASE_URL =
-            com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.BASE_URL
+            AppConfig.Gcs.BASE_URL
         private const val ID_PREFIX =
-            com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.ID_PREFIX
+            AppConfig.Gcs.ID_PREFIX
         private const val IMAGE_EXT =
-            com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.IMAGE_EXT
+            AppConfig.Gcs.IMAGE_EXT
         private const val CONTENT_TYPE_JPEG =
-            com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.CONTENT_TYPE_JPEG
+            AppConfig.Gcs.CONTENT_TYPE_JPEG
         private const val CONTENT_TYPE_JSON =
-            com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.CONTENT_TYPE_JSON
+            AppConfig.Gcs.CONTENT_TYPE_JSON
     }
 
     override suspend fun cancelDeletion(id: String) {

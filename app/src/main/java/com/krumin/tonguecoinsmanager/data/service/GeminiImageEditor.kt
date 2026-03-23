@@ -16,6 +16,8 @@ import com.google.firebase.ai.type.SafetySetting
 import com.google.firebase.ai.type.SerializationException
 import com.google.firebase.ai.type.content
 import com.google.firebase.ai.type.generationConfig
+import com.krumin.tonguecoinsmanager.R
+import com.krumin.tonguecoinsmanager.data.infrastructure.PromptTemplates
 import com.krumin.tonguecoinsmanager.domain.service.ImageEditor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -55,7 +57,7 @@ class GeminiImageEditor(
                 ?: throw IllegalArgumentException("Invalid image data")
 
             val fullPrompt =
-                com.krumin.tonguecoinsmanager.data.infrastructure.PromptTemplates.getImageEditingPrompt(
+                PromptTemplates.getImageEditingPrompt(
                     prompt
                 )
 
@@ -86,12 +88,12 @@ class GeminiImageEditor(
                 }?.firstOrNull()
 
             imageBytes
-                ?: throw IllegalStateException(context.getString(com.krumin.tonguecoinsmanager.R.string.ai_error_no_image))
+                ?: throw IllegalStateException(context.getString(R.string.ai_error_no_image))
 
         } catch (e: SerializationException) {
             Log.e("GeminiImageEditor", "Serialization failure", e)
             throw IllegalStateException(
-                context.getString(com.krumin.tonguecoinsmanager.R.string.ai_error_serialization),
+                context.getString(R.string.ai_error_serialization),
                 e
             )
         } catch (e: Exception) {

@@ -8,6 +8,7 @@ import com.google.firebase.ai.ai
 import com.google.firebase.ai.type.GenerateContentResponse
 import com.google.firebase.ai.type.GenerativeBackend
 import com.google.firebase.ai.type.generationConfig
+import com.krumin.tonguecoinsmanager.data.infrastructure.PromptTemplates
 import com.krumin.tonguecoinsmanager.domain.model.PhotoMetadata
 import com.krumin.tonguecoinsmanager.domain.service.CategoryGenerator
 import kotlinx.coroutines.Dispatchers
@@ -59,7 +60,7 @@ class GeminiCategoryGenerator(
             .filter { it.categories.isNotBlank() }
             .associate { it.title to it.categories } // Use map to avoid duplicating identical title-category pairs
 
-        return com.krumin.tonguecoinsmanager.data.infrastructure.PromptTemplates.getCategoryGenerationPrompt(
+        return PromptTemplates.getCategoryGenerationPrompt(
             title,
             distinctContext
         )

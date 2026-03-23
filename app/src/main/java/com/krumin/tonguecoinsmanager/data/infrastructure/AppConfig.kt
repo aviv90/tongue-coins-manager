@@ -28,6 +28,8 @@ object AppConfig {
     object Firestore {
         const val COLLECTION_DAILY_RIDDLES = "daily_riddles"
         const val DATABASE_ID = "tongue-coins"
+        const val COLLECTION_APP_BROADCASTS = "app_broadcasts"
+        const val DOCUMENT_CURRENT = "current"
     }
 
     object Navigation {
@@ -42,6 +44,7 @@ object AppConfig {
         const val RESULT_DELETE = "deleted"
 
         const val ROUTE_DAILY_RIDDLE = "daily_riddle"
+        const val ROUTE_DAILY_BROADCAST = "daily_broadcast"
     }
 }
 
