@@ -59,7 +59,7 @@ class BroadcastViewModel(
     private val _error = MutableStateFlow<String?>(null)
     private val _saveSuccess = MutableStateFlow(false)
 
-    val state: StateFlow<BroadcastState> = combine(
+    val state: StateFlow<BroadcastState> = combine<Any?, BroadcastState>(
         _id,
         _title,
         _body,

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Tongue Coins Manager</string>
-    <string name="app_title_main">ניהול מטבעות לשון</string>
+    <string name="app_title_main">מטבעות ניהול</string>
     <string name="search_placeholder">חיפוש…</string>
     <string name="search_content_description">חיפוש</string>
     <string name="search_close_content_description">סגור חיפוש</string>

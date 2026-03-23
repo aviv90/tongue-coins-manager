@@ -3,6 +3,7 @@ package com.krumin.tonguecoinsmanager.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.krumin.tonguecoinsmanager.R
+import com.krumin.tonguecoinsmanager.domain.model.PendingChange
 import com.krumin.tonguecoinsmanager.domain.model.PhotoMetadata
 import com.krumin.tonguecoinsmanager.domain.model.Platform
 import com.krumin.tonguecoinsmanager.domain.repository.PhotoRepository

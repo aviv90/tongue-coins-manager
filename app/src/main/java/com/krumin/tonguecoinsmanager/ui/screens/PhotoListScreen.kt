@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
@@ -252,7 +253,7 @@ fun PhotoListScreen(
                                 }
                                 IconButton(onClick = { navController?.navigate(Screen.DailyBroadcast.route) }) {
                                     Icon(
-                                        imageVector = androidx.compose.material.icons.automirrored.filled.Announcement, // Or Campaign
+                                        imageVector = Icons.Default.Info,
                                         contentDescription = "Daily Broadcast"
                                     )
                                 }
