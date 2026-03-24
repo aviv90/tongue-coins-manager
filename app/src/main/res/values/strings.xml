@@ -117,6 +117,8 @@
     <string name="riddle_search_placeholder">חפש לפי כותרת או מזהה...</string>
     <string name="riddle_select_button">בחר</string>
     <string name="riddle_selected_badge">נבחר</string>
+    <string name="batch_save_confirm_title">שמירת שינויים</string>
+    <string name="batch_save_confirm_message">האם אתה בטוח שברצונך לשמור את כל השינויים (הוספה, מחיקה, עריכה) לשרת?</string>
     <string name="riddle_button_ok">אישור</string>
     <string name="riddle_details_not_found">מזהה: %1$s (פרטים לא נמצאו)</string>
 </resources>

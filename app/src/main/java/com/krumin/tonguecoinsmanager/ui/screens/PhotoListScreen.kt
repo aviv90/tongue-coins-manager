@@ -119,6 +119,31 @@ fun PhotoListScreen(
         }
     }
 
+    var showCommitDialog by remember { mutableStateOf(false) }
+
+    if (showCommitDialog) {
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+            AlertDialog(
+                onDismissRequest = { showCommitDialog = false },
+                title = { Text(stringResource(R.string.batch_save_confirm_title)) },
+                text = { Text(stringResource(R.string.batch_save_confirm_message)) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        viewModel.handleAction(MainAction.CommitChanges)
+                        showCommitDialog = false
+                    }) {
+                        Text(stringResource(R.string.broadcast_dialog_button_confirm))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showCommitDialog = false }) {
+                        Text(stringResource(R.string.broadcast_dialog_button_cancel))
+                    }
+                }
+            )
+        }
+    }
+
     // Observe result from EditPhotoScreen
     val navigationResult = navController?.currentBackStackEntry
         ?.savedStateHandle
@@ -288,7 +313,7 @@ fun PhotoListScreen(
                 ) {
                     BatchActionBar(
                         count = state.pendingChanges.size,
-                        onCommit = { viewModel.handleAction(MainAction.CommitChanges) },
+                        onCommit = { showCommitDialog = true },
                         onDiscard = { viewModel.handleAction(MainAction.DiscardChanges) }
                     )
                 }

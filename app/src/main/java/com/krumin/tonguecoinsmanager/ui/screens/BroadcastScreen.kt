@@ -1,13 +1,11 @@
 package com.krumin.tonguecoinsmanager.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -18,9 +16,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
@@ -45,17 +40,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
-import coil.compose.AsyncImage
 import com.krumin.tonguecoinsmanager.R
 import com.krumin.tonguecoinsmanager.ui.viewmodel.BroadcastViewModel
-import com.krumin.tonguecoinsmanager.util.MarkdownText
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,7 +61,7 @@ fun BroadcastScreen(
 
     LaunchedEffect(state.saveSuccess) {
         if (state.saveSuccess) {
-            snackbarHostState.showSnackbar(context.getString(R.string.success_broadcast_saved))
+            onBack()
             viewModel.clearSaveSuccess()
         }
     }
@@ -266,97 +256,6 @@ fun BroadcastScreen(
                         }
                     }
                 )
-
-                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_large)))
-
-                // Preview Section
-                Text(
-                    stringResource(R.string.broadcast_preview_header),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = dimensionResource(R.dimen.spacing_large)),
-                    elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(R.dimen.surface_elevation)),
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (state.disabled) MaterialTheme.colorScheme.surfaceVariant.copy(
-                            alpha = 0.5f
-                        ) else MaterialTheme.colorScheme.surface
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(dimensionResource(R.dimen.spacing_large)),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        if (state.disabled) {
-                            Text(
-                                stringResource(R.string.broadcast_preview_disabled_warning),
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.labelSmall,
-                                modifier = Modifier.align(Alignment.Start)
-                            )
-                            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_medium)))
-                        }
-
-                        if (!state.imageUrl.isNullOrBlank()) {
-                            AsyncImage(
-                                model = state.imageUrl,
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(dimensionResource(R.dimen.broadcast_preview_height))
-                                    .background(Color.Gray),
-                                contentScale = ContentScale.Crop
-                            )
-                            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_normal)))
-                        }
-
-                        if (state.title.isNotBlank()) {
-                            Text(
-                                text = state.title,
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.align(Alignment.Start)
-                            )
-                            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_medium)))
-                        }
-
-                        if (state.body.isNotBlank()) {
-                            MarkdownText(
-                                text = state.body,
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.align(Alignment.Start)
-                            )
-                            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_large)))
-                        }
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.End
-                        ) {
-                            val ctaText = state.ctaText
-                            val ctaUrl = state.ctaUrl
-                            if (!ctaText.isNullOrBlank() && !ctaUrl.isNullOrBlank()) {
-                                Button(onClick = { /* Do nothing in preview */ }) {
-                                    Text(ctaText)
-                                }
-                                Spacer(modifier = Modifier.width(dimensionResource(R.dimen.spacing_medium)))
-                            }
-                            Button(
-                                onClick = { /* Do nothing in preview */ },
-                                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            ) {
-                                Text(stringResource(R.string.broadcast_preview_close_button))
-                            }
-                        }
-                    }
-                }
             }
         }
     }
