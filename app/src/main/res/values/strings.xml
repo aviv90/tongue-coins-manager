@@ -80,7 +80,7 @@
     <string name="broadcast_settings_header">הגדרות הודעה</string>
     <string name="broadcast_field_id_label">מזהה הודעה (id)</string>
     <string name="broadcast_error_id_required">מזהה חובה</string>
-    <string name="broadcast_id_hint">מומלץ פורמט: daily-YYYY-MM-DD</string>
+    <string name="broadcast_id_hint">פורמט מומלץ: daily-YYYY-MM-DD-x</string>
     <string name="broadcast_field_disabled_label">השבת הודעה (disabled)</string>
     <string name="broadcast_content_header">תוכן ההודעה</string>
     <string name="broadcast_field_title_label">כותרת</string>
