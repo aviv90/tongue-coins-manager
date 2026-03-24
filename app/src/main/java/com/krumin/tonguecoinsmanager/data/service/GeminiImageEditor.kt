@@ -2,7 +2,6 @@ package com.krumin.tonguecoinsmanager.data.service
 
 import android.content.Context
 import android.graphics.BitmapFactory
-import android.util.Log
 import com.google.firebase.Firebase
 import com.google.firebase.ai.GenerativeModel
 import com.google.firebase.ai.ai
@@ -91,13 +90,11 @@ class GeminiImageEditor(
                 ?: throw IllegalStateException(context.getString(R.string.ai_error_no_image))
 
         } catch (e: SerializationException) {
-            Log.e("GeminiImageEditor", "Serialization failure", e)
             throw IllegalStateException(
                 context.getString(R.string.ai_error_serialization),
                 e
             )
         } catch (e: Exception) {
-            Log.e("GeminiImageEditor", "AI image edit failure detected", e)
             throw e
         }
     }

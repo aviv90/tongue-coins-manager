@@ -94,7 +94,11 @@
     <string name="broadcast_error_cta_mismatch">חובה למלא את שני השדות או להשאיר את שניהם ריקים</string>
     <string name="broadcast_preview_header">תצוגה מקדימה (כפי שיופיע בדיאלוג)</string>
     <string name="broadcast_preview_disabled_warning">ההודעה מושבתת</string>
-    <string name="broadcast_preview_close_button">סגור</string>
+    <string name="broadcast_preview_close_button">סגירה</string>
+    <string name="broadcast_save_confirm_title">פרסום הודעה יומית</string>
+    <string name="broadcast_save_confirm_message">האם אתה בטוח שברצונך לשמור ולפרסם הודעה זו בשרת?</string>
+    <string name="broadcast_dialog_button_confirm">אישור</string>
+    <string name="broadcast_dialog_button_cancel">ביטול</string>
     <string name="success_broadcast_saved">ההודעה נשמרה בהצלחה</string>
 
     <!-- Daily Riddle Screen -->

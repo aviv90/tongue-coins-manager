@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import coil.compose.AsyncImage
 import com.krumin.tonguecoinsmanager.R
 import com.krumin.tonguecoinsmanager.ui.viewmodel.BroadcastViewModel
+import com.krumin.tonguecoinsmanager.util.MarkdownText
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -62,6 +63,28 @@ fun BroadcastScreen(
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = androidx.compose.ui.platform.LocalContext.current
+    var showSaveDialog by remember { mutableStateOf(false) }
+
+    if (showSaveDialog) {
+        AlertDialog(
+            onDismissRequest = { showSaveDialog = false },
+            title = { Text(stringResource(R.string.broadcast_save_confirm_title)) },
+            text = { Text(stringResource(R.string.broadcast_save_confirm_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.onSave()
+                    showSaveDialog = false
+                }) {
+                    Text(stringResource(R.string.broadcast_dialog_button_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSaveDialog = false }) {
+                    Text(stringResource(R.string.broadcast_dialog_button_cancel))
+                }
+            }
+        )
+    }
 
     LaunchedEffect(state.saveSuccess) {
         if (state.saveSuccess) {
@@ -94,7 +117,7 @@ fun BroadcastScreen(
                     },
                     actions = {
                         IconButton(
-                            onClick = { viewModel.onSave() },
+                            onClick = { showSaveDialog = true },
                             enabled = !state.isLoading && state.isValid
                         ) {
                             if (state.isLoading) {
@@ -298,7 +321,7 @@ fun BroadcastScreen(
                         }
 
                         if (state.body.isNotBlank()) {
-                            Text(
+                            MarkdownText(
                                 text = state.body,
                                 style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier.align(Alignment.Start)

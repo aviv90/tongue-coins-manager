@@ -104,7 +104,10 @@ class BroadcastViewModel(
                     _disabled.value = broadcast.disabled
                 } else {
                     // Start with defaults if not exists
-                    _id.value = "daily-${System.currentTimeMillis() / 1000}"
+                    val dateFormat =
+                        java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                    val dateStr = dateFormat.format(java.util.Date())
+                    _id.value = "daily-$dateStr-1"
                 }
             } catch (e: Exception) {
                 _error.value = "Failed to load broadcast: ${e.message}"

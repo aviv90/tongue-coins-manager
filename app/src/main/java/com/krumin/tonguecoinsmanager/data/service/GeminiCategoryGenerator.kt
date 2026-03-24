@@ -1,7 +1,6 @@
 package com.krumin.tonguecoinsmanager.data.service
 
 import android.content.Context
-import android.util.Log
 import com.google.firebase.Firebase
 import com.google.firebase.ai.GenerativeModel
 import com.google.firebase.ai.ai
@@ -50,7 +49,6 @@ class GeminiCategoryGenerator(
                 .filter { it.isNotBlank() }
                 .take(2)
         } catch (e: Exception) {
-            Log.e("GeminiAI", "AI categorical failure for: $title", e)
             emptyList()
         }
     }
