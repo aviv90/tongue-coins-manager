@@ -64,17 +64,25 @@ fun parseMarkdown(text: String): AnnotatedString {
             val match = matcher.group()
             when {
                 match.startsWith("**") && match.endsWith("**") -> {
-                    val content = match.substring(2, match.length - 2)
-                    pushStyle(SpanStyle(fontWeight = FontWeight.Bold))
-                    append(content)
-                    pop()
+                    if (match.length >= 4) {
+                        val content = match.substring(2, match.length - 2)
+                        pushStyle(SpanStyle(fontWeight = FontWeight.Bold))
+                        append(content)
+                        pop()
+                    } else {
+                        append(match)
+                    }
                 }
 
                 match.startsWith("*") && match.endsWith("*") -> {
-                    val content = match.substring(1, match.length - 1)
-                    pushStyle(SpanStyle(fontStyle = FontStyle.Italic))
-                    append(content)
-                    pop()
+                    if (match.length >= 2) {
+                        val content = match.substring(1, match.length - 1)
+                        pushStyle(SpanStyle(fontStyle = FontStyle.Italic))
+                        append(content)
+                        pop()
+                    } else {
+                        append(match)
+                    }
                 }
 
                 match.startsWith("[") && match.contains("](") && match.endsWith(")") -> {
