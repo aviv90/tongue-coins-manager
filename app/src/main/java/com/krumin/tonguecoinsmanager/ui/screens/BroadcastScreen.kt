@@ -69,27 +69,6 @@ fun BroadcastScreen(
     val context = androidx.compose.ui.platform.LocalContext.current
     var showSaveDialog by remember { mutableStateOf(false) }
 
-    if (showSaveDialog) {
-        AlertDialog(
-            onDismissRequest = { showSaveDialog = false },
-            title = { Text(stringResource(R.string.broadcast_save_confirm_title)) },
-            text = { Text(stringResource(R.string.broadcast_save_confirm_message)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    viewModel.onSave()
-                    showSaveDialog = false
-                }) {
-                    Text(stringResource(R.string.broadcast_dialog_button_confirm))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showSaveDialog = false }) {
-                    Text(stringResource(R.string.broadcast_dialog_button_cancel))
-                }
-            }
-        )
-    }
-
     LaunchedEffect(state.saveSuccess) {
         if (state.saveSuccess) {
             snackbarHostState.showSnackbar(context.getString(R.string.success_broadcast_saved))
@@ -106,6 +85,27 @@ fun BroadcastScreen(
 
 
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+        if (showSaveDialog) {
+            AlertDialog(
+                onDismissRequest = { showSaveDialog = false },
+                title = { Text(stringResource(R.string.broadcast_save_confirm_title)) },
+                text = { Text(stringResource(R.string.broadcast_save_confirm_message)) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        viewModel.onSave()
+                        showSaveDialog = false
+                    }) {
+                        Text(stringResource(R.string.broadcast_dialog_button_confirm))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showSaveDialog = false }) {
+                        Text(stringResource(R.string.broadcast_dialog_button_cancel))
+                    }
+                }
+            )
+        }
+
         Scaffold(
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
