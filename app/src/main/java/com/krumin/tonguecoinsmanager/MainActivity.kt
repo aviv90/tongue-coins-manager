@@ -76,8 +76,15 @@ fun TongueCoinsApp() {
         }
         composable(Screen.DailyBroadcast.route) {
             BroadcastScreen(
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onResult = { result ->
+                    navController.previousBackStackEntry?.savedStateHandle?.set(
+                        Screen.RESULT_KEY,
+                        result
+                    )
+                }
             )
         }
     }
 }
+ Moda

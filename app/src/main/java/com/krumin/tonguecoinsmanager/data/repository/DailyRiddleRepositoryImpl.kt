@@ -1,14 +1,13 @@
 package com.krumin.tonguecoinsmanager.data.repository
 
 import android.content.Context
-import com.google.auth.oauth2.GoogleCredentials
 import com.google.cloud.firestore.Firestore
-import com.google.cloud.firestore.FirestoreOptions
 import com.google.cloud.firestore.SetOptions
 import com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig
 import com.krumin.tonguecoinsmanager.data.model.DailyRiddleEntity
 import com.krumin.tonguecoinsmanager.domain.model.DailyRiddle
 import com.krumin.tonguecoinsmanager.domain.repository.DailyRiddleRepository
+import com.krumin.tonguecoinsmanager.util.FirestoreResilience.awaitWithRetry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -18,16 +17,8 @@ import java.util.Date
 
 class DailyRiddleRepositoryImpl(
     private val context: Context,
-    private val keyFileName: String = AppConfig.Gcs.DEFAULT_KEY_FILE
+    private val firestore: Firestore
 ) : DailyRiddleRepository {
-
-    private val firestore: Firestore by lazy {
-        val options = FirestoreOptions.newBuilder()
-            .setCredentials(GoogleCredentials.fromStream(context.assets.open(keyFileName)))
-            .setDatabaseId(AppConfig.Firestore.DATABASE_ID)
-            .build()
-        options.service
-    }
 
     private val collection by lazy { firestore.collection(COLLECTION_NAME) }
 
@@ -39,18 +30,23 @@ class DailyRiddleRepositoryImpl(
                 manuallySet = true,
                 createdAt = Date() // Use java.util.Date directly
             )
-            collection.document(date).set(entity, SetOptions.merge())
-                .get() // .get() blocks until complete
+            awaitWithRetry {
+                collection.document(date).set(entity, SetOptions.merge())
+            }
             Unit
         }
 
     override suspend fun resetDailyRiddle(date: String) = withContext(Dispatchers.IO) {
-        collection.document(date).delete().get()
+        awaitWithRetry {
+            collection.document(date).delete()
+        }
         Unit
     }
 
     override suspend fun getDailyRiddle(date: String): DailyRiddle? = withContext(Dispatchers.IO) {
-        val snapshot = collection.document(date).get().get()
+        val snapshot = awaitWithRetry {
+            collection.document(date).get()
+        }
         if (snapshot.exists()) {
             snapshot.toObject(DailyRiddleEntity::class.java)?.toDomain()
         } else {
@@ -91,3 +87,4 @@ class DailyRiddleRepositoryImpl(
         private const val COLLECTION_NAME = AppConfig.Firestore.COLLECTION_DAILY_RIDDLES
     }
 }
+ Moda

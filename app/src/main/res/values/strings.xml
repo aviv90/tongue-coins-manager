@@ -121,4 +121,17 @@
     <string name="batch_save_confirm_message">האם אתה בטוח שברצונך לשמור את כל השינויים (הוספה, מחיקה, עריכה) לשרת?</string>
     <string name="riddle_button_ok">אישור</string>
     <string name="riddle_details_not_found">מזהה: %1$s (פרטים לא נמצאו)</string>
+    <string name="broadcast_env_production">פרודקשן (Production)</string>
+    <string name="broadcast_env_test">טסט (Test)</string>
+    <string name="broadcast_target_env_header">סביבת יעד (Environment)</string>
+    <string name="error_broadcast_load">טעינת ההודעה נכשלה: %1$s</string>
+    <string name="error_broadcast_save">שמירת ההודעה נכשלה: %1$s</string>
+    <string name="error_broadcast_invalid">ביטול: נתונים לא תקינים. ודא שמזהה לא ריק, יש תוכן, ו-CTA תקין.</string>
+    <string name="riddle_id_label">מזהה: %1$s</string>
+    <string name="riddle_error_load">טעינת החידות נכשלה: %1$s</string>
+    <string name="riddle_error_set">הגדרת החידה נכשלה: %1$s</string>
+    <string name="riddle_error_reset">איפוס החידה נכשל: %1$s</string>
+    <string name="content_desc_daily_riddle">ניהול חידה יומית</string>
+    <string name="content_desc_daily_broadcast">ניהול הודעה יומית</string>
+    <string name="content_desc_select_date">בחר תאריך</string>
 </resources>

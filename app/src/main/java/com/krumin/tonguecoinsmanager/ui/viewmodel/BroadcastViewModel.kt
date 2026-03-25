@@ -2,8 +2,11 @@ package com.krumin.tonguecoinsmanager.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.krumin.tonguecoinsmanager.R
 import com.krumin.tonguecoinsmanager.domain.model.Broadcast
+import com.krumin.tonguecoinsmanager.domain.model.Environment
 import com.krumin.tonguecoinsmanager.domain.repository.BroadcastRepository
+import com.krumin.tonguecoinsmanager.util.UiText
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -20,8 +23,9 @@ data class BroadcastState(
     val ctaUrl: String? = null,
     val disabled: Boolean = false,
     val isLoading: Boolean = false,
-    val error: String? = null,
-    val saveSuccess: Boolean = false
+    val error: UiText? = null,
+    val saveSuccess: Boolean = false,
+    val selectedEnvironment: Environment = Environment.PRODUCTION
 ) {
     val isValid: Boolean
         get() {
@@ -54,12 +58,13 @@ class BroadcastViewModel(
     private val _ctaText = MutableStateFlow<String?>(null)
     private val _ctaUrl = MutableStateFlow<String?>(null)
     private val _disabled = MutableStateFlow(false)
+    private val _selectedEnvironment = MutableStateFlow(Environment.PRODUCTION)
 
     private val _isLoading = MutableStateFlow(false)
-    private val _error = MutableStateFlow<String?>(null)
+    private val _error = MutableStateFlow<UiText?>(null)
     private val _saveSuccess = MutableStateFlow(false)
 
-    val state: StateFlow<BroadcastState> = combine<Any?, BroadcastState>(
+    val state: StateFlow<BroadcastState> = combine(
         _id,
         _title,
         _body,
@@ -69,7 +74,8 @@ class BroadcastViewModel(
         _disabled,
         _isLoading,
         _error,
-        _saveSuccess
+        _saveSuccess,
+        _selectedEnvironment
     ) { args ->
         BroadcastState(
             id = args[0] as String,
@@ -80,8 +86,9 @@ class BroadcastViewModel(
             ctaUrl = args[5] as String?,
             disabled = args[6] as Boolean,
             isLoading = args[7] as Boolean,
-            error = args[8] as String?,
-            saveSuccess = args[9] as Boolean
+            error = args[8] as UiText?,
+            saveSuccess = args[9] as Boolean,
+            selectedEnvironment = args[10] as Environment
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), BroadcastState())
 
@@ -93,7 +100,8 @@ class BroadcastViewModel(
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val broadcast = repository.getBroadcast()
+                val env = _selectedEnvironment.value
+                val broadcast = repository.getBroadcast(env)
                 if (broadcast != null) {
                     _id.value = broadcast.id
                     _title.value = broadcast.title
@@ -102,18 +110,33 @@ class BroadcastViewModel(
                     _ctaText.value = broadcast.ctaText
                     _ctaUrl.value = broadcast.ctaUrl
                     _disabled.value = broadcast.disabled
+                } else {
+                    // Reset fields for new environment
+                    _title.value = ""
+                    _body.value = ""
+                    _imageUrl.value = null
+                    _ctaText.value = null
+                    _ctaUrl.value = null
+                    _disabled.value = false
+                    
+                    // Only auto-generate ID for today's date if no message exists
+                    val dateFormat =
+                        java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                    val dateStr = dateFormat.format(java.util.Date())
+                    _id.value = "daily-$dateStr-1"
                 }
-
-                // Always auto-generate ID for today's date on screen load
-                val dateFormat =
-                    java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
-                val dateStr = dateFormat.format(java.util.Date())
-                _id.value = "daily-$dateStr-1"
             } catch (e: Exception) {
-                _error.value = "Failed to load broadcast: ${e.message}"
+                _error.value = UiText.StringResource(R.string.error_broadcast_load, e.message ?: "Unknown")
             } finally {
                 _isLoading.value = false
             }
+        }
+    }
+
+    fun onEnvironmentChanged(env: Environment) {
+        if (_selectedEnvironment.value != env) {
+            _selectedEnvironment.value = env
+            loadBroadcast()
         }
     }
 
@@ -149,7 +172,7 @@ class BroadcastViewModel(
         viewModelScope.launch {
             val currentState = state.value
             if (!currentState.isValid) {
-                _error.value = "ביטול: נתונים לא תקינים. ודא שמזהה לא ריק, יש תוכן, ו-CTA תקין."
+                _error.value = UiText.StringResource(R.string.error_broadcast_invalid)
                 return@launch
             }
 
@@ -165,11 +188,11 @@ class BroadcastViewModel(
                     ctaUrl = currentState.ctaUrl,
                     disabled = currentState.disabled
                 )
-                repository.saveBroadcast(broadcast)
+                repository.saveBroadcast(broadcast, currentState.selectedEnvironment)
                 _saveSuccess.value = true
                 _error.value = null
             } catch (e: Exception) {
-                _error.value = "Failed to save: ${e.message}"
+                _error.value = UiText.StringResource(R.string.error_broadcast_save, e.message ?: "Unknown")
             } finally {
                 _isLoading.value = false
             }
@@ -184,3 +207,4 @@ class BroadcastViewModel(
         _saveSuccess.value = false
     }
 }
+ Moda

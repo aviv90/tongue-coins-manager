@@ -119,7 +119,7 @@ fun EditPhotoScreen(
         state.generatedCategories?.let { genCats ->
             if (genCats.isNotEmpty()) {
                 categories =
-                    genCats.joinToString(", ")
+                    genCats.joinToString(com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.SEPARATOR_COMMA)
                 viewModel.handleAction(EditAction.ClearGeneratedCategories)
                 snackbarHostState.showSnackbar(successMessage)
             }
@@ -475,7 +475,7 @@ fun EditPhotoScreen(
                         shape = MaterialTheme.shapes.large,
                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                         border = androidx.compose.foundation.BorderStroke(
-                            dimensionResource(R.dimen.spacing_tiny) / 2, // 1.dp
+                            dimensionResource(R.dimen.stroke_thin),
                             MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
                         )
                     ) {
@@ -537,7 +537,7 @@ fun EditPhotoScreen(
                                                     R.dimen.spacing_small
                                                 )
                                             ), // ~20.dp
-                                            strokeWidth = dimensionResource(R.dimen.spacing_tiny), // 2.dp
+                                            strokeWidth = dimensionResource(R.dimen.stroke_small),
                                             color = MaterialTheme.colorScheme.onPrimary
                                         )
                                     }

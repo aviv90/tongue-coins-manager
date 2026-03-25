@@ -19,5 +19,6 @@ sealed class Screen(val route: String) {
         const val RESULT_ADD = "added"
         const val RESULT_EDIT = "edited"
         const val RESULT_DELETE = "deleted"
+        const val RESULT_BROADCAST_SAVED = "broadcast_saved"
     }
 }

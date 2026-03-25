@@ -20,6 +20,8 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -45,6 +47,8 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.LayoutDirection
 import com.krumin.tonguecoinsmanager.R
+import com.krumin.tonguecoinsmanager.domain.model.Environment
+import com.krumin.tonguecoinsmanager.ui.navigation.Screen
 import com.krumin.tonguecoinsmanager.ui.viewmodel.BroadcastViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -52,6 +56,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun BroadcastScreen(
     onBack: () -> Unit,
+    onResult: (String) -> Unit,
     viewModel: BroadcastViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -61,6 +66,7 @@ fun BroadcastScreen(
 
     LaunchedEffect(state.saveSuccess) {
         if (state.saveSuccess) {
+            onResult(Screen.RESULT_BROADCAST_SAVED)
             onBack()
             viewModel.clearSaveSuccess()
         }
@@ -68,7 +74,7 @@ fun BroadcastScreen(
 
     LaunchedEffect(state.error) {
         state.error?.let {
-            snackbarHostState.showSnackbar(it)
+            snackbarHostState.showSnackbar(it.asString(context))
             viewModel.clearError()
         }
     }
@@ -141,6 +147,37 @@ fun BroadcastScreen(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_large))
             ) {
+                // Environment Selection
+                Text(
+                    stringResource(R.string.broadcast_target_env_header),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_medium))
+                ) {
+                    FilterChip(
+                        selected = state.selectedEnvironment == Environment.PRODUCTION,
+                        onClick = { viewModel.onEnvironmentChanged(Environment.PRODUCTION) },
+                        label = { Text(stringResource(R.string.broadcast_env_production)) },
+                        leadingIcon = if (state.selectedEnvironment == Environment.PRODUCTION) {
+                            { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
+                        } else null,
+                        enabled = !state.isLoading
+                    )
+                    FilterChip(
+                        selected = state.selectedEnvironment == Environment.TEST,
+                        onClick = { viewModel.onEnvironmentChanged(Environment.TEST) },
+                        label = { Text(stringResource(R.string.broadcast_env_test)) },
+                        leadingIcon = if (state.selectedEnvironment == Environment.TEST) {
+                            { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
+                        } else null,
+                        enabled = !state.isLoading
+                    )
+                }
+
+                Divider()
+
                 // Settings Section
                 Text(
                     stringResource(R.string.broadcast_settings_header),

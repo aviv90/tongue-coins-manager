@@ -1,6 +1,10 @@
 package com.krumin.tonguecoinsmanager.di
 
 import androidx.room.Room
+import com.google.api.gax.retrying.RetrySettings
+import com.google.auth.oauth2.GoogleCredentials
+import com.google.cloud.firestore.Firestore
+import com.google.cloud.firestore.FirestoreOptions
 import com.krumin.tonguecoinsmanager.BuildConfig
 import com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig
 import com.krumin.tonguecoinsmanager.data.local.AppDatabase
@@ -24,6 +28,7 @@ import com.krumin.tonguecoinsmanager.ui.viewmodel.MainViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
+import java.time.Duration
 
 val appModule = module {
     // Database
@@ -36,6 +41,24 @@ val appModule = module {
     }
 
     single { get<AppDatabase>().pendingChangeDao() }
+
+    // Firestore - Centralized & Resilient
+    single<Firestore> {
+        val context = androidContext()
+        val retrySettings = RetrySettings.newBuilder()
+            .setInitialRetryDelay(Duration.ofMillis(500))
+            .setRetryDelayMultiplier(1.5)
+            .setMaxRetryDelay(Duration.ofMillis(5000))
+            .setTotalTimeout(Duration.ofMinutes(1))
+            .build()
+
+        val options = FirestoreOptions.newBuilder()
+            .setCredentials(GoogleCredentials.fromStream(context.assets.open(AppConfig.Gcs.DEFAULT_KEY_FILE)))
+            .setDatabaseId(AppConfig.Firestore.DATABASE_ID)
+            .setRetrySettings(retrySettings)
+            .build()
+        options.service
+    }
 
     // Repository
     single<PhotoRepository> {
@@ -60,12 +83,11 @@ val appModule = module {
     }
 
     single<DailyRiddleRepository> {
-        DailyRiddleRepositoryImpl(androidContext())
+        DailyRiddleRepositoryImpl(androidContext(), get())
     }
 
-    // Broadcast Use Cases (none needed if accessing repo directly, but maintaining pattern to inject repo)
     single<BroadcastRepository> {
-        BroadcastRepositoryImpl(androidContext())
+        BroadcastRepositoryImpl(androidContext(), get())
     }
 
     // Daily Riddle Use Cases
@@ -93,5 +115,4 @@ val appModule = module {
         )
     }
 }
-
-
+ Moda

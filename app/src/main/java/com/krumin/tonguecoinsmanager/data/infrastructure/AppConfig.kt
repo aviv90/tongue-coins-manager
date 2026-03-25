@@ -30,6 +30,7 @@ object AppConfig {
         const val DATABASE_ID = "tongue-coins"
         const val COLLECTION_APP_BROADCASTS = "app_broadcasts"
         const val DOCUMENT_CURRENT = "current"
+        const val DOCUMENT_TEST = "test"
     }
 
 }

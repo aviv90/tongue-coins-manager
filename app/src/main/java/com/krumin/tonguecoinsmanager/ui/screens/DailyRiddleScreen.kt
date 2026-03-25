@@ -89,6 +89,14 @@ fun DailyRiddleScreen(
 
     val context = LocalContext.current
     val calendar = Calendar.getInstance()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(state.error) {
+        state.error?.let {
+            snackbarHostState.showSnackbar(it.asString(context))
+            viewModel.clearError()
+        }
+    }
 
     // Date Picker Dialog
     val datePickerDialog = DatePickerDialog(
@@ -161,6 +169,7 @@ fun DailyRiddleScreen(
         }
 
         Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 CenterAlignedTopAppBar(
                     title = { Text(stringResource(R.string.riddle_title_screen)) },
@@ -197,7 +206,10 @@ fun DailyRiddleScreen(
                         style = MaterialTheme.typography.titleMedium
                     )
                     Button(onClick = { datePickerDialog.show() }) {
-                        Icon(Icons.Default.CalendarToday, contentDescription = null)
+                        Icon(
+                            Icons.Default.CalendarToday,
+                            contentDescription = stringResource(R.string.content_desc_select_date)
+                        )
                         Spacer(modifier = Modifier.width(dimensionResource(R.dimen.spacing_medium)))
                         Text(stringResource(R.string.riddle_select_date_button))
                     }
@@ -251,7 +263,7 @@ fun DailyRiddleScreen(
                                             fontWeight = FontWeight.Bold
                                         )
                                         Text(
-                                            text = "מזהה: ${currentRiddleDetails.id}",
+                                            text = stringResource(R.string.riddle_id_label, currentRiddleDetails.id),
                                             style = MaterialTheme.typography.bodySmall
                                         )
                                         if (state.currentRiddle!!.manuallySet) {

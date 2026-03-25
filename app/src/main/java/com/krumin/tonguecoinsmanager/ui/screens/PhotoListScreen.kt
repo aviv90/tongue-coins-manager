@@ -144,7 +144,7 @@ fun PhotoListScreen(
         }
     }
 
-    // Observe result from EditPhotoScreen
+    // Observe result from screens
     val navigationResult = navController?.currentBackStackEntry
         ?.savedStateHandle
         ?.getStateFlow<String?>(Screen.RESULT_KEY, null)
@@ -156,6 +156,7 @@ fun PhotoListScreen(
                 Screen.RESULT_ADD -> context.getString(R.string.success_add)
                 Screen.RESULT_EDIT -> context.getString(R.string.success_edit)
                 Screen.RESULT_DELETE -> context.getString(R.string.success_delete)
+                Screen.RESULT_BROADCAST_SAVED -> context.getString(R.string.success_broadcast_saved)
                 else -> null
             }
             message?.let {
@@ -273,13 +274,13 @@ fun PhotoListScreen(
                                 IconButton(onClick = { navController?.navigate(Screen.DailyRiddle.route) }) {
                                     Icon(
                                         imageVector = Icons.Default.CalendarToday,
-                                        contentDescription = "Daily Riddle"
+                                        contentDescription = stringResource(R.string.content_desc_daily_riddle)
                                     )
                                 }
                                 IconButton(onClick = { navController?.navigate(Screen.DailyBroadcast.route) }) {
                                     Icon(
                                         imageVector = Icons.Default.Info,
-                                        contentDescription = "Daily Broadcast"
+                                        contentDescription = stringResource(R.string.content_desc_daily_broadcast)
                                     )
                                 }
                             }
@@ -741,3 +742,4 @@ fun UndoDeletionDialog(
         }
     )
 }
+ Moda

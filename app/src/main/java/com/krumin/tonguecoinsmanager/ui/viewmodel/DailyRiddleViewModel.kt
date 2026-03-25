@@ -2,12 +2,14 @@ package com.krumin.tonguecoinsmanager.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.krumin.tonguecoinsmanager.R
 import com.krumin.tonguecoinsmanager.domain.model.DailyRiddle
 import com.krumin.tonguecoinsmanager.domain.model.PhotoMetadata
 import com.krumin.tonguecoinsmanager.domain.repository.PhotoRepository
 import com.krumin.tonguecoinsmanager.domain.usecase.dailyriddle.GetDailyRiddleUseCase
 import com.krumin.tonguecoinsmanager.domain.usecase.dailyriddle.ResetDailyRiddleUseCase
 import com.krumin.tonguecoinsmanager.domain.usecase.dailyriddle.SetDailyRiddleUseCase
+import com.krumin.tonguecoinsmanager.util.UiText
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -15,7 +17,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -26,7 +27,7 @@ data class DailyRiddleState(
     val currentRiddle: DailyRiddle? = null,
     val availableRiddles: List<PhotoMetadata> = emptyList(),
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: UiText? = null
 )
 
 class DailyRiddleViewModel(
@@ -40,7 +41,7 @@ class DailyRiddleViewModel(
         MutableStateFlow(SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date()))
 
     private val _isLoading = MutableStateFlow(false)
-    private val _error = MutableStateFlow<String?>(null)
+    private val _error = MutableStateFlow<UiText?>(null)
 
     // Combine flows to create the UI state
     val state: StateFlow<DailyRiddleState> = combine(
@@ -58,7 +59,6 @@ class DailyRiddleViewModel(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DailyRiddleState())
 
     // Separate flow for available riddles to avoid re-fetching on date change if not needed
-    // In a real app we might want to paginate or filter this, but for now we load all.
     private val _availableRiddles = MutableStateFlow<List<PhotoMetadata>>(emptyList())
     val availableRiddles: StateFlow<List<PhotoMetadata>> = _availableRiddles.asStateFlow()
 
@@ -71,7 +71,7 @@ class DailyRiddleViewModel(
             try {
                 _availableRiddles.value = photoRepository.getPhotos()
             } catch (e: Exception) {
-                _error.update { "Failed to load riddles: ${e.message}" }
+                _error.value = UiText.StringResource(R.string.riddle_error_load, e.message ?: "Unknown")
             }
         }
     }
@@ -87,7 +87,7 @@ class DailyRiddleViewModel(
                 setDailyRiddleUseCase(_selectedDate.value, contentItemId)
                 _error.value = null // Clear error on success
             } catch (e: Exception) {
-                _error.value = "Failed to set riddle: ${e.message}"
+                _error.value = UiText.StringResource(R.string.riddle_error_set, e.message ?: "Unknown")
             } finally {
                 _isLoading.value = false
             }
@@ -101,7 +101,7 @@ class DailyRiddleViewModel(
                 resetDailyRiddleUseCase(_selectedDate.value)
                 _error.value = null
             } catch (e: Exception) {
-                _error.value = "Failed to reset riddle: ${e.message}"
+                _error.value = UiText.StringResource(R.string.riddle_error_reset, e.message ?: "Unknown")
             } finally {
                 _isLoading.value = false
             }
@@ -112,3 +112,4 @@ class DailyRiddleViewModel(
         _error.value = null
     }
 }
+ Moda
