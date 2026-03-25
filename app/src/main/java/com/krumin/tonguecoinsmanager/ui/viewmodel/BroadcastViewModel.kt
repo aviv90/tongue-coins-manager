@@ -118,7 +118,7 @@ class BroadcastViewModel(
                     _ctaText.value = null
                     _ctaUrl.value = null
                     _disabled.value = false
-                    
+
                     // Only auto-generate ID for today's date if no message exists
                     val dateFormat =
                         java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
@@ -126,7 +126,8 @@ class BroadcastViewModel(
                     _id.value = "daily-$dateStr-1"
                 }
             } catch (e: Exception) {
-                _error.value = UiText.StringResource(R.string.error_broadcast_load, e.message ?: "Unknown")
+                _error.value =
+                    UiText.StringResource(R.string.error_broadcast_load, e.message ?: "Unknown")
             } finally {
                 _isLoading.value = false
             }
@@ -192,7 +193,8 @@ class BroadcastViewModel(
                 _saveSuccess.value = true
                 _error.value = null
             } catch (e: Exception) {
-                _error.value = UiText.StringResource(R.string.error_broadcast_save, e.message ?: "Unknown")
+                _error.value =
+                    UiText.StringResource(R.string.error_broadcast_save, e.message ?: "Unknown")
             } finally {
                 _isLoading.value = false
             }
@@ -207,4 +209,3 @@ class BroadcastViewModel(
         _saveSuccess.value = false
     }
 }
- Moda

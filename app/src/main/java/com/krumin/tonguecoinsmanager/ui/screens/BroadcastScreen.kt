@@ -161,7 +161,13 @@ fun BroadcastScreen(
                         onClick = { viewModel.onEnvironmentChanged(Environment.PRODUCTION) },
                         label = { Text(stringResource(R.string.broadcast_env_production)) },
                         leadingIcon = if (state.selectedEnvironment == Environment.PRODUCTION) {
-                            { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
+                            {
+                                Icon(
+                                    Icons.Default.Check,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(FilterChipDefaults.IconSize)
+                                )
+                            }
                         } else null,
                         enabled = !state.isLoading
                     )
@@ -170,7 +176,13 @@ fun BroadcastScreen(
                         onClick = { viewModel.onEnvironmentChanged(Environment.TEST) },
                         label = { Text(stringResource(R.string.broadcast_env_test)) },
                         leadingIcon = if (state.selectedEnvironment == Environment.TEST) {
-                            { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
+                            {
+                                Icon(
+                                    Icons.Default.Check,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(FilterChipDefaults.IconSize)
+                                )
+                            }
                         } else null,
                         enabled = !state.isLoading
                     )

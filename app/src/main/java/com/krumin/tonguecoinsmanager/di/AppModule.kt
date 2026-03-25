@@ -28,7 +28,7 @@ import com.krumin.tonguecoinsmanager.ui.viewmodel.MainViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
-import java.time.Duration
+import org.threeten.bp.Duration
 
 val appModule = module {
     // Database
@@ -115,4 +115,3 @@ val appModule = module {
         )
     }
 }
- Moda

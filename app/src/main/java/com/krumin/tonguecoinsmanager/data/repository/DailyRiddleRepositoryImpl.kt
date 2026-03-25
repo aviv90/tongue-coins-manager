@@ -87,4 +87,3 @@ class DailyRiddleRepositoryImpl(
         private const val COLLECTION_NAME = AppConfig.Firestore.COLLECTION_DAILY_RIDDLES
     }
 }
- Moda

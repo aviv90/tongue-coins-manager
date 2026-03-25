@@ -71,7 +71,8 @@ class DailyRiddleViewModel(
             try {
                 _availableRiddles.value = photoRepository.getPhotos()
             } catch (e: Exception) {
-                _error.value = UiText.StringResource(R.string.riddle_error_load, e.message ?: "Unknown")
+                _error.value =
+                    UiText.StringResource(R.string.riddle_error_load, e.message ?: "Unknown")
             }
         }
     }
@@ -87,7 +88,8 @@ class DailyRiddleViewModel(
                 setDailyRiddleUseCase(_selectedDate.value, contentItemId)
                 _error.value = null // Clear error on success
             } catch (e: Exception) {
-                _error.value = UiText.StringResource(R.string.riddle_error_set, e.message ?: "Unknown")
+                _error.value =
+                    UiText.StringResource(R.string.riddle_error_set, e.message ?: "Unknown")
             } finally {
                 _isLoading.value = false
             }
@@ -101,7 +103,8 @@ class DailyRiddleViewModel(
                 resetDailyRiddleUseCase(_selectedDate.value)
                 _error.value = null
             } catch (e: Exception) {
-                _error.value = UiText.StringResource(R.string.riddle_error_reset, e.message ?: "Unknown")
+                _error.value =
+                    UiText.StringResource(R.string.riddle_error_reset, e.message ?: "Unknown")
             } finally {
                 _isLoading.value = false
             }
@@ -112,4 +115,3 @@ class DailyRiddleViewModel(
         _error.value = null
     }
 }
- Moda

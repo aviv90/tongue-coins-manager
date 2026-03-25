@@ -79,9 +79,11 @@ object FirestoreResilience {
                     Status.Code.DEADLINE_EXCEEDED,
                     Status.Code.RESOURCE_EXHAUSTED,
                     Status.Code.ABORTED -> true
+
                     else -> false
                 }
             }
+
             else -> {
                 val message = e.message ?: ""
                 message.contains("Unable to resolve host", ignoreCase = true) ||

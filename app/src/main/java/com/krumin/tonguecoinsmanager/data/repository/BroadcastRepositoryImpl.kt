@@ -61,14 +61,15 @@ class BroadcastRepositoryImpl(
         awaitClose { listener.remove() }
     }
 
-    override suspend fun saveBroadcast(broadcast: Broadcast, env: Environment) = withContext(Dispatchers.IO) {
-        val entity = broadcast.toEntity()
-        awaitWithRetry {
-            collection.document(getDocumentId(env))
-                .set(entity, SetOptions.merge())
+    override suspend fun saveBroadcast(broadcast: Broadcast, env: Environment) =
+        withContext(Dispatchers.IO) {
+            val entity = broadcast.toEntity()
+            awaitWithRetry {
+                collection.document(getDocumentId(env))
+                    .set(entity, SetOptions.merge())
+            }
+            Unit
         }
-        Unit
-    }
 
     private fun BroadcastEntity.toDomain(): Broadcast {
         return Broadcast(
@@ -94,4 +95,3 @@ class BroadcastRepositoryImpl(
         )
     }
 }
- Moda

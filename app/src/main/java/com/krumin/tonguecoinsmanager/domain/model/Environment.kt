@@ -4,4 +4,3 @@ enum class Environment {
     PRODUCTION,
     TEST
 }
- Moda
