@@ -18,6 +18,7 @@ import com.krumin.tonguecoinsmanager.ui.navigation.Screen
 import com.krumin.tonguecoinsmanager.ui.screens.BroadcastScreen
 import com.krumin.tonguecoinsmanager.ui.screens.DailyRiddleScreen
 import com.krumin.tonguecoinsmanager.ui.screens.EditPhotoScreen
+import com.krumin.tonguecoinsmanager.ui.screens.FcmScreen
 import com.krumin.tonguecoinsmanager.ui.screens.PhotoListScreen
 import com.krumin.tonguecoinsmanager.ui.theme.TongueCoinsManagerTheme
 
@@ -84,6 +85,9 @@ fun TongueCoinsApp() {
                     )
                 }
             )
+        }
+        composable(Screen.SendFcm.route) {
+            FcmScreen(onBack = { navController.popBackStack() })
         }
     }
 }

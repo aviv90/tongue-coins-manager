@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Tongue Coins Manager</string>
-    <string name="app_title_main">מטבעות ניהול</string>
+    <string name="app_title_main">TCM</string>
     <string name="search_placeholder">חיפוש…</string>
     <string name="search_content_description">חיפוש</string>
     <string name="search_close_content_description">סגור חיפוש</string>
@@ -139,4 +139,37 @@
     <string name="broadcast_copy_to_prod_confirm_message">האם אתה בטוח שברצונך להעתיק את כל שדות ההודעה מסביבת הטסט לסביבת הפרודקשן? ההודעה הנוכחית בפרודקשן תידרס.</string>
     <string name="success_broadcast_copied">המידע הועתק בהצלחה לסביבת הפרודקשן</string>
     <string name="broadcast_generate_id_content_description">ג׳נרט מזהה אוטומטי</string>
+    <string name="content_desc_fcm">שליחת הודעות FCM</string>
+
+    <!-- FCM Screen -->
+    <string name="fcm_title_screen">שליחת הודעת Push</string>
+    <string name="fcm_header_notification">תוכן המודעה</string>
+    <string name="fcm_field_title_label">כותרת ההודעה</string>
+    <string name="fcm_field_body_label">גוף ההודעה</string>
+    <string name="fcm_field_image_url_label">URL של תמונה (אופציונלי)</string>
+    <string name="fcm_header_target">יעד השליחה</string>
+    <string name="fcm_target_topic">נושא (Topic)</string>
+    <string name="fcm_target_condition">תנאי (Condition)</string>
+    <string name="fcm_target_token">טוקן ספציפי (Token)</string>
+    <string name="fcm_field_topic_label">שם הנושא (למשל: all, ios, android)</string>
+    <string name="fcm_field_condition_label">ביטוי תנאי (למשל: \'news\' in topics)</string>
+    <string name="fcm_field_token_label">Device Registration Token</string>
+    <string name="fcm_header_data">שדות מידע (Data Payload)</string>
+    <string name="fcm_data_key_placeholder">מפתח (Key)</string>
+    <string name="fcm_data_value_placeholder">ערך (Value)</string>
+    <string name="fcm_button_add_data">הוסף שדה</string>
+    <string name="fcm_header_test_devices">מכשירי טסט</string>
+    <string name="fcm_button_send_test">שלח הודעת בדיקה</string>
+    <string name="fcm_button_manage_devices">נהל מכשירים</string>
+    <string name="fcm_button_send_now">שלח עכשיו לכולם</string>
+    <string name="fcm_dry_run_label">מצב בדיקה (Dry Run - ללא שליחה בפועל)</string>
+    <string name="fcm_dialog_add_device_title">הוספת מכשיר טסט</string>
+    <string name="fcm_field_device_name_label">שם המכשיר (למשל: האייפון של אביב)</string>
+    <string name="fcm_dialog_select_device_title">בחר מכשיר לשליחת טסט</string>
+    <string name="fcm_error_title_required">חובה להזין כותרת</string>
+    <string name="fcm_error_body_required">חובה להזין גוף הודעה</string>
+    <string name="fcm_success_sent">ההודעה נשלחה בהצלחה!</string>
+    <string name="fcm_success_dry_run">הבדיקה עברה בהצלחה (Dry Run)</string>
+    <string name="fcm_confirm_send_title">אישור שליחה המונית</string>
+    <string name="fcm_confirm_send_message">האם אתה בטוח שברצונך לשלוח את ההודעה לכל המשתמשים ביעד הנבחר? פעולה זו אינה ניתנת לביטול.</string>
 </resources>

@@ -85,6 +85,8 @@ dependencies {
     implementation(libs.firebase.ai) {
         exclude(group = "com.google.protobuf", module = "protobuf-javalite")
     }
+    implementation(libs.firebase.messaging)
+    implementation(libs.okhttp)
     // Firestore (Server SDK for Service Account support)
     implementation(libs.google.cloud.firestore) {
         exclude(group = "org.apache.httpcomponents", module = "httpclient")

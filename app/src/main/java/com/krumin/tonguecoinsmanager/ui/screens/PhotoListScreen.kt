@@ -34,11 +34,11 @@ import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -256,14 +256,28 @@ fun PhotoListScreen(
                         }
                     )
                 } else {
-                    CenterAlignedTopAppBar(
+                    TopAppBar(
                         title = {
-                            Text(
-                                text = stringResource(R.string.app_title_main),
-                                fontWeight = FontWeight.Bold
-                            )
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.app_title_main),
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.titleLarge
+                                )
+                            }
                         },
                         navigationIcon = {
+                            IconButton(onClick = { viewModel.handleAction(MainAction.LoadPhotos) }) {
+                                Icon(
+                                    imageVector = Icons.Default.Refresh,
+                                    contentDescription = stringResource(R.string.refresh_content_description)
+                                )
+                            }
+                        },
+                        actions = {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 IconButton(onClick = { isSearchActive = true }) {
                                     Icon(
@@ -283,17 +297,14 @@ fun PhotoListScreen(
                                         contentDescription = stringResource(R.string.content_desc_daily_broadcast)
                                     )
                                 }
-                            }
-                        },
-                        actions = {
-                            IconButton(onClick = { viewModel.handleAction(MainAction.LoadPhotos) }) {
-                                Icon(
-                                    imageVector = Icons.Default.Refresh,
-                                    contentDescription = stringResource(R.string.refresh_content_description)
-                                )
+                                IconButton(onClick = { navController?.navigate(Screen.SendFcm.route) }) {
+                                    Icon(
+                                        imageVector = Icons.Default.NotificationsActive,
+                                        contentDescription = stringResource(R.string.content_desc_fcm)
+                                    )
+                                }
                             }
                         }
-
                     )
                 }
             },

@@ -13,6 +13,8 @@ sealed class Screen(val route: String) {
         }
     }
 
+    object SendFcm : Screen("send_fcm")
+
     companion object {
         const val ARG_ID = "id"
         const val RESULT_KEY = "action_result"

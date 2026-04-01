@@ -24,7 +24,9 @@ import com.krumin.tonguecoinsmanager.domain.usecase.dailyriddle.SetDailyRiddleUs
 import com.krumin.tonguecoinsmanager.ui.viewmodel.BroadcastViewModel
 import com.krumin.tonguecoinsmanager.ui.viewmodel.DailyRiddleViewModel
 import com.krumin.tonguecoinsmanager.ui.viewmodel.EditPhotoViewModel
+import com.krumin.tonguecoinsmanager.ui.viewmodel.FcmViewModel
 import com.krumin.tonguecoinsmanager.ui.viewmodel.MainViewModel
+import okhttp3.OkHttpClient
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
@@ -37,10 +39,16 @@ val appModule = module {
             androidContext(),
             AppDatabase::class.java,
             "tongue_coins_db"
-        ).build()
+        )
+            .fallbackToDestructiveMigration()
+            .build()
     }
 
     single { get<AppDatabase>().pendingChangeDao() }
+    single { get<AppDatabase>().testDeviceDao() }
+
+    // Network
+    single { OkHttpClient() }
 
     // Firestore - Centralized & Resilient
     single<Firestore> {
@@ -70,6 +78,14 @@ val appModule = module {
         )
     }
 
+    single<com.krumin.tonguecoinsmanager.domain.repository.FcmRepository> {
+        com.krumin.tonguecoinsmanager.data.repository.FcmRepositoryImpl(
+            context = androidContext(),
+            testDeviceDao = get(),
+            okHttpClient = get()
+        )
+    }
+
     // Gemini
     single<CategoryGenerator> {
         GeminiCategoryGenerator(androidContext(), BuildConfig.GEMINI_API_KEY)
@@ -95,9 +111,14 @@ val appModule = module {
     single { SetDailyRiddleUseCase(get()) }
     single { ResetDailyRiddleUseCase(get()) }
 
+    // FCM Use Cases
+    single { com.krumin.tonguecoinsmanager.domain.usecase.fcm.SendFcmNotificationUseCase(get()) }
+    single { com.krumin.tonguecoinsmanager.domain.usecase.fcm.ManageTestDevicesUseCase(get()) }
+
     // ViewModels
     viewModel { MainViewModel(get()) }
     viewModel { BroadcastViewModel(get()) }
+    viewModel { FcmViewModel(get(), get()) }
     viewModel {
         DailyRiddleViewModel(
             get(),
