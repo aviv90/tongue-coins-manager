@@ -8,7 +8,6 @@ import com.krumin.tonguecoinsmanager.data.local.TestDeviceEntity
 import com.krumin.tonguecoinsmanager.data.model.AndroidConfig
 import com.krumin.tonguecoinsmanager.data.model.AndroidNotification
 import com.krumin.tonguecoinsmanager.data.model.FcmMessage
-import com.krumin.tonguecoinsmanager.data.model.FcmNotification
 import com.krumin.tonguecoinsmanager.data.model.FcmRequest
 import com.krumin.tonguecoinsmanager.domain.model.FcmNotification
 import com.krumin.tonguecoinsmanager.domain.model.NotificationTarget
@@ -24,6 +23,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
+import com.krumin.tonguecoinsmanager.data.model.FcmNotification as FcmApiNotification
 
 class FcmRepositoryImpl(
     private val context: Context,
@@ -98,7 +98,7 @@ class FcmRepositoryImpl(
     }
 
     private fun FcmNotification.toApiMessage(): FcmMessage {
-        val fcmNotification = FcmNotification(
+        val fcmNotification = FcmApiNotification(
             title = title,
             body = body,
             image = imageUrl
