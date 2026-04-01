@@ -155,10 +155,13 @@
     <string name="fcm_field_condition_label">ביטוי תנאי (למשל: \'news\' in topics)</string>
     <string name="fcm_field_token_label">Device Registration Token</string>
     <string name="fcm_header_data">שדות מידע (Data Payload)</string>
-    <string name="fcm_date_format_mask">%04d-%02d-%02d</string>
-    <string name="fcm_time_format_mask">%02d:%02d</string>
+    <string name="fcm_data_key_placeholder">מפתח (Key)</string>
+    <string name="fcm_data_value_placeholder">ערך (Value)</string>
+    <string name="fcm_date_format_mask">%1$04d-%2$02d-%3$02d</string>
+    <string name="fcm_time_format_mask">%1$02d:%2$02d</string>
     <string name="fcm_button_send_test">שלח בדיקה</string>
     <string name="fcm_button_manage_devices">נהל מכשירים</string>
+    <string name="fcm_header_test_devices">מכשירי טסט</string>
     <string name="fcm_button_send_now">שלח עכשיו לכולם</string>
     <string name="fcm_dry_run_label">מצב בדיקה (Dry Run - ללא שליחה בפועל)</string>
     <string name="fcm_dialog_add_device_title">הוספת מכשיר טסט</string>

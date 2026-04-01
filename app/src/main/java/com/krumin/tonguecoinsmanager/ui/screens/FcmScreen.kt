@@ -89,6 +89,7 @@ import com.krumin.tonguecoinsmanager.ui.viewmodel.FcmAction
 import com.krumin.tonguecoinsmanager.ui.viewmodel.FcmState
 import com.krumin.tonguecoinsmanager.ui.viewmodel.FcmViewModel
 import org.koin.androidx.compose.koinViewModel
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -115,7 +116,7 @@ fun FcmScreen(
             { _, year, month, day ->
                 val formatted =
                     String.format(
-                        java.util.Locale.US,
+                        Locale.US,
                         context.getString(R.string.fcm_date_format_mask),
                         year,
                         month + 1,
