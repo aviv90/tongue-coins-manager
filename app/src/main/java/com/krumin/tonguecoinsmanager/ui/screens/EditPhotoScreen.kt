@@ -232,7 +232,8 @@ fun EditPhotoScreen(
 
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         if (showFullScreenImage) {
-            val imageSource = state.confirmedAiImage ?: selectedImageUri ?: state.draftImage ?: state.photo?.imageUrl
+            val imageSource = state.confirmedAiImage ?: selectedImageUri ?: state.draftImage
+            ?: state.photo?.imageUrl
             if (imageSource != null) {
                 androidx.compose.ui.window.Dialog(
                     onDismissRequest = { showFullScreenImage = false },
@@ -440,7 +441,8 @@ fun EditPhotoScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     val imageSource =
-                        state.confirmedAiImage ?: selectedImageUri ?: state.draftImage ?: state.photo?.imageUrl
+                        state.confirmedAiImage ?: selectedImageUri ?: state.draftImage
+                        ?: state.photo?.imageUrl
                     if (imageSource != null) {
                         AsyncImage(
                             model = imageSource,

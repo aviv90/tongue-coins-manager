@@ -124,7 +124,8 @@ class BroadcastViewModel(
                     val dateFormat =
                         java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
                     val dateStr = dateFormat.format(java.util.Date())
-                    _id.value = "${AppConfig.Firestore.BROADCAST_ID_PREFIX}${dateStr}${AppConfig.Firestore.BROADCAST_ID_SUFFIX}"
+                    _id.value =
+                        "${AppConfig.Firestore.BROADCAST_ID_PREFIX}${dateStr}${AppConfig.Firestore.BROADCAST_ID_SUFFIX}"
                 }
             } catch (e: Exception) {
                 _error.value =
@@ -237,7 +238,8 @@ class BroadcastViewModel(
     fun onGenerateId() {
         val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
         val dateStr = dateFormat.format(java.util.Date())
-        _id.value = "${AppConfig.Firestore.BROADCAST_ID_PREFIX}${dateStr}${AppConfig.Firestore.BROADCAST_ID_SUFFIX}"
+        _id.value =
+            "${AppConfig.Firestore.BROADCAST_ID_PREFIX}${dateStr}${AppConfig.Firestore.BROADCAST_ID_SUFFIX}"
     }
 
     fun clearError() {

@@ -202,12 +202,12 @@ class EditPhotoViewModel(
                     else -> null
                 }
 
-                _state.update { 
+                _state.update {
                     it.copy(
-                        isLoading = false, 
+                        isLoading = false,
                         photo = photo,
                         draftImage = draftImage
-                    ) 
+                    )
                 }
             } catch (e: Exception) {
                 _state.update {
