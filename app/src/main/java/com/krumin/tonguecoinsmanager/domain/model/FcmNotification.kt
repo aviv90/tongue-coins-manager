@@ -5,8 +5,17 @@ data class FcmNotification(
     val body: String,
     val imageUrl: String? = null,
     val data: Map<String, String> = emptyMap(),
-    val target: NotificationTarget
+    val target: NotificationTarget,
+    val priority: FcmPriority = FcmPriority.HIGH,
+    val androidChannelId: String? = "general",
+    val soundEnabled: Boolean = true,
+    val badgeCount: Int? = null,
+    val scheduledTime: Long? = null
 )
+
+enum class FcmPriority {
+    HIGH, NORMAL
+}
 
 sealed class NotificationTarget {
     data class Topic(val name: String) : NotificationTarget()

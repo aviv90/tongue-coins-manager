@@ -28,7 +28,7 @@ import com.krumin.tonguecoinsmanager.ui.viewmodel.FcmViewModel
 import com.krumin.tonguecoinsmanager.ui.viewmodel.MainViewModel
 import okhttp3.OkHttpClient
 import org.koin.android.ext.koin.androidContext
-import org.koin.androidx.viewmodel.dsl.viewModel
+import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 import org.threeten.bp.Duration
 
@@ -40,7 +40,7 @@ val appModule = module {
             AppDatabase::class.java,
             "tongue_coins_db"
         )
-            .fallbackToDestructiveMigration()
+            .fallbackToDestructiveMigration(true)
             .build()
     }
 
@@ -81,6 +81,7 @@ val appModule = module {
     single<com.krumin.tonguecoinsmanager.domain.repository.FcmRepository> {
         com.krumin.tonguecoinsmanager.data.repository.FcmRepositoryImpl(
             context = androidContext(),
+            firestore = get(),
             testDeviceDao = get(),
             okHttpClient = get()
         )
@@ -89,6 +90,10 @@ val appModule = module {
     // Gemini
     single<CategoryGenerator> {
         GeminiCategoryGenerator(androidContext(), BuildConfig.GEMINI_API_KEY)
+    }
+
+    single<com.krumin.tonguecoinsmanager.domain.service.FcmGenerator> {
+        com.krumin.tonguecoinsmanager.data.service.GeminiFcmGenerator(BuildConfig.GEMINI_API_KEY)
     }
 
     single<ImageEditor> {
@@ -113,12 +118,14 @@ val appModule = module {
 
     // FCM Use Cases
     single { com.krumin.tonguecoinsmanager.domain.usecase.fcm.SendFcmNotificationUseCase(get()) }
+    single { com.krumin.tonguecoinsmanager.domain.usecase.fcm.ScheduleFcmNotificationUseCase(get()) }
+    single { com.krumin.tonguecoinsmanager.domain.usecase.fcm.GenerateFcmNotificationUseCase(get()) }
     single { com.krumin.tonguecoinsmanager.domain.usecase.fcm.ManageTestDevicesUseCase(get()) }
 
     // ViewModels
     viewModel { MainViewModel(get()) }
     viewModel { BroadcastViewModel(get()) }
-    viewModel { FcmViewModel(get(), get()) }
+    viewModel { FcmViewModel(get(), get(), get(), get()) }
     viewModel {
         DailyRiddleViewModel(
             get(),

@@ -16,6 +16,7 @@ import com.google.firebase.ai.type.SerializationException
 import com.google.firebase.ai.type.content
 import com.google.firebase.ai.type.generationConfig
 import com.krumin.tonguecoinsmanager.R
+import com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig
 import com.krumin.tonguecoinsmanager.data.infrastructure.PromptTemplates
 import com.krumin.tonguecoinsmanager.domain.service.ImageEditor
 import kotlinx.coroutines.Dispatchers
@@ -28,7 +29,7 @@ class GeminiImageEditor(
 
     private val model: GenerativeModel by lazy {
         Firebase.ai(backend = GenerativeBackend.googleAI()).generativeModel(
-            modelName = "gemini-3-pro-image-preview", // Nano Banana Pro
+            modelName = AppConfig.Gemini.MODEL_PRO_IMAGE, // Nano Banana Pro
             generationConfig = generationConfig {
                 temperature = 1.0f
                 topP = 0.95f

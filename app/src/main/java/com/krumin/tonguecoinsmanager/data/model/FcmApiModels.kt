@@ -35,7 +35,9 @@ data class AndroidConfig(
 @Serializable
 data class AndroidNotification(
     val sound: String? = "default",
-    val click_action: String? = null
+    val click_action: String? = null,
+    val channel_id: String? = null,
+    val image: String? = null
 )
 
 @Serializable
@@ -50,7 +52,8 @@ data class ApnsPayload(
 
 @Serializable
 data class Aps(
-    val sound: String? = "default"
+    val sound: String? = "default",
+    val badge: Int? = null
 )
 
 @Serializable

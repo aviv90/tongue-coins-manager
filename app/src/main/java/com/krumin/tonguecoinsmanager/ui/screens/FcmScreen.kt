@@ -1,5 +1,12 @@
 package com.krumin.tonguecoinsmanager.ui.screens
 
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,15 +26,22 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.RestartAlt
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
@@ -55,6 +69,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -65,9 +81,12 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.krumin.tonguecoinsmanager.R
+import com.krumin.tonguecoinsmanager.domain.model.FcmPriority
 import com.krumin.tonguecoinsmanager.domain.model.NotificationTarget
+import com.krumin.tonguecoinsmanager.domain.model.Platform
 import com.krumin.tonguecoinsmanager.domain.model.TestDevice
 import com.krumin.tonguecoinsmanager.ui.viewmodel.FcmAction
+import com.krumin.tonguecoinsmanager.ui.viewmodel.FcmState
 import com.krumin.tonguecoinsmanager.ui.viewmodel.FcmViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -85,6 +104,37 @@ fun FcmScreen(
     var showAddDeviceDialog by remember { mutableStateOf(false) }
     var showSelectDeviceDialog by remember { mutableStateOf(false) }
     var showConfirmSendDialog by remember { mutableStateOf(false) }
+    var showConfirmClearDialog by remember { mutableStateOf(false) }
+    var advancedExpanded by remember { mutableStateOf(false) }
+
+    // Date/Time Pickers
+    val calendar = remember { java.util.Calendar.getInstance() }
+    val datePickerDialog = remember {
+        DatePickerDialog(
+            context,
+            { _, year, month, day ->
+                val formatted =
+                    String.format(java.util.Locale.US, "%04d-%02d-%02d", year, month + 1, day)
+                viewModel.handleAction(FcmAction.UpdateScheduledDate(formatted))
+            },
+            calendar.get(java.util.Calendar.YEAR),
+            calendar.get(java.util.Calendar.MONTH),
+            calendar.get(java.util.Calendar.DAY_OF_MONTH)
+        )
+    }
+
+    val timePickerDialog = remember {
+        TimePickerDialog(
+            context,
+            { _, hour, minute ->
+                val formatted = String.format(java.util.Locale.US, "%02d:%02d", hour, minute)
+                viewModel.handleAction(FcmAction.UpdateScheduledTime(formatted))
+            },
+            calendar.get(java.util.Calendar.HOUR_OF_DAY),
+            calendar.get(java.util.Calendar.MINUTE),
+            true
+        )
+    }
 
     LaunchedEffect(state.error) {
         state.error?.let {
@@ -112,6 +162,12 @@ fun FcmScreen(
                         }
                     },
                     actions = {
+                        IconButton(onClick = { showConfirmClearDialog = true }) {
+                            Icon(
+                                Icons.Default.RestartAlt,
+                                contentDescription = stringResource(R.string.fcm_clear_form_button)
+                            )
+                        }
                         if (state.isLoading) {
                             CircularProgressIndicator(
                                 modifier = Modifier
@@ -120,21 +176,19 @@ fun FcmScreen(
                                 strokeWidth = 2.dp
                             )
                         } else {
+                            val layoutDirection = LocalLayoutDirection.current
                             IconButton(onClick = {
-                                if (state.title.isBlank() || state.body.isBlank()) {
-                                    // Validation handled in VM or locally
-                                    if (state.title.isBlank()) viewModel.handleAction(
-                                        FcmAction.UpdateTitle(
-                                            ""
-                                        )
-                                    ) // Trigger error?
-                                } else {
+                                if (state.title.isNotBlank() && state.body.isNotBlank()) {
                                     showConfirmSendDialog = true
                                 }
                             }) {
                                 Icon(
-                                    Icons.Default.Send,
+                                    Icons.AutoMirrored.Filled.Send,
                                     contentDescription = null,
+                                    modifier = Modifier.graphicsLayer {
+                                        rotationY =
+                                            if (layoutDirection == LayoutDirection.Rtl) 180f else 0f
+                                    },
                                     tint = MaterialTheme.colorScheme.primary
                                 )
                             }
@@ -143,14 +197,58 @@ fun FcmScreen(
                 )
             }
         ) { padding ->
-            Column(
+            androidx.compose.foundation.layout.Box(
                 modifier = Modifier
-                    .padding(padding)
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(dimensionResource(R.dimen.spacing_large)),
-                verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_large))
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.surface,
+                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                            )
+                        )
+                    )
             ) {
+                Column(
+                    modifier = Modifier
+                        .padding(padding)
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(dimensionResource(R.dimen.spacing_large)),
+                    verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_large))
+                ) {
+                    // AI Generation
+                    FcmHeader(stringResource(R.string.fcm_idea_prompt_label))
+                    OutlinedTextField(
+                        value = state.ideaPrompt,
+                        onValueChange = { viewModel.handleAction(FcmAction.UpdateIdeaPrompt(it)) },
+                        label = { Text(stringResource(R.string.fcm_idea_prompt_label)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text(stringResource(R.string.fcm_idea_prompt_placeholder)) },
+                        trailingIcon = {
+                            if (state.isGenerating) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(
+                                        dimensionResource(
+                                            R.dimen.progress_size_small
+                                        )
+                                    )
+                                )
+                            } else {
+                                IconButton(
+                                    onClick = { viewModel.handleAction(FcmAction.GenerateContent) },
+                                    enabled = state.ideaPrompt.isNotBlank()
+                                ) {
+                                    Icon(
+                                        Icons.Default.AutoFixHigh,
+                                        contentDescription = stringResource(R.string.fcm_generate_button_content_description),
+                                        tint = MaterialTheme.colorScheme.secondary
+                                    )
+                                }
+                            }
+                        }
+                    )
+
                 // Notification Content
                 FcmHeader(stringResource(R.string.fcm_header_notification))
 
@@ -176,7 +274,7 @@ fun FcmScreen(
                     label = { Text(stringResource(R.string.fcm_field_image_url_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    placeholder = { Text("https://...") }
+                    placeholder = { Text(stringResource(R.string.fcm_field_image_url_placeholder)) }
                 )
 
                 if (!state.imageUrl.isNullOrBlank()) {
@@ -185,8 +283,8 @@ fun FcmScreen(
                         contentDescription = null,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(150.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .height(dimensionResource(R.dimen.broadcast_preview_height))
+                            .clip(RoundedCornerShape(dimensionResource(R.dimen.card_radius_medium)))
                             .background(MaterialTheme.colorScheme.surfaceVariant),
                         contentScale = ContentScale.Fit
                     )
@@ -194,7 +292,6 @@ fun FcmScreen(
 
                 // Target
                 FcmHeader(stringResource(R.string.fcm_header_target))
-
                 TargetSelector(
                     selectedTarget = state.target,
                     onTargetSelected = { viewModel.handleAction(FcmAction.UpdateTarget(it)) }
@@ -202,12 +299,86 @@ fun FcmScreen(
 
                 // Data Payload
                 FcmHeader(stringResource(R.string.fcm_header_data))
-
                 DataPayloadEditor(
                     payload = state.dataPayload,
                     onAdd = { k, v -> viewModel.handleAction(FcmAction.AddDataPair(k, v)) },
                     onRemove = { k -> viewModel.handleAction(FcmAction.RemoveDataPair(k)) }
                 )
+
+                    // Advanced Settings
+                    AdvancedSettingsSection(
+                        state = state,
+                        expanded = advancedExpanded,
+                        onToggle = { advancedExpanded = !advancedExpanded },
+                        onPriorityChanged = { viewModel.handleAction(FcmAction.UpdatePriority(it)) },
+                        onChannelIdChanged = { viewModel.handleAction(FcmAction.UpdateChannelId(it)) },
+                        onSoundToggle = { viewModel.handleAction(FcmAction.UpdateSoundEnabled(it)) },
+                        onBadgeChanged = { viewModel.handleAction(FcmAction.UpdateBadgeCount(it)) }
+                    )
+
+                    // Scheduling
+                    FcmHeader(stringResource(R.string.fcm_header_scheduling))
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = androidx.compose.material3.CardDefaults.cardColors(
+                            containerColor = if (state.isScheduled) MaterialTheme.colorScheme.primaryContainer.copy(
+                                alpha = 0.5f
+                            ) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                        )
+                    ) {
+                        Column(modifier = Modifier.padding(dimensionResource(R.dimen.spacing_medium))) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Checkbox(
+                                    checked = state.isScheduled,
+                                    onCheckedChange = {
+                                        viewModel.handleAction(
+                                            FcmAction.UpdateIsScheduled(
+                                                it
+                                            )
+                                        )
+                                    }
+                                )
+                                Text(stringResource(R.string.fcm_schedule_label))
+                            }
+
+                            AnimatedVisibility(visible = state.isScheduled) {
+                                Column(
+                                    verticalArrangement = Arrangement.spacedBy(
+                                        dimensionResource(
+                                            R.dimen.spacing_medium
+                                        )
+                                    )
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(
+                                            dimensionResource(R.dimen.spacing_medium)
+                                        )
+                                    ) {
+                                        OutlinedButton(
+                                            onClick = { datePickerDialog.show() },
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Icon(
+                                                Icons.Default.CalendarToday,
+                                                contentDescription = null
+                                            )
+                                            Spacer(Modifier.width(dimensionResource(R.dimen.spacing_medium)))
+                                            Text(state.scheduledDate)
+                                        }
+                                        OutlinedButton(
+                                            onClick = { timePickerDialog.show() },
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Icon(Icons.Default.Schedule, contentDescription = null)
+                                            Spacer(Modifier.width(dimensionResource(R.dimen.spacing_medium)))
+                                            Text(state.scheduledTime)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
 
                 // Test Devices
                 FcmHeader(stringResource(R.string.fcm_header_test_devices))
@@ -222,7 +393,7 @@ fun FcmScreen(
                         enabled = state.testDevices.isNotEmpty() && state.title.isNotBlank() && state.body.isNotBlank()
                     ) {
                         Icon(Icons.Default.BugReport, contentDescription = null)
-                        Spacer(Modifier.width(8.dp))
+                        Spacer(Modifier.width(dimensionResource(R.dimen.spacing_medium)))
                         Text(stringResource(R.string.fcm_button_send_test))
                     }
 
@@ -231,24 +402,28 @@ fun FcmScreen(
                         modifier = Modifier.weight(1f)
                     ) {
                         Icon(Icons.Default.Settings, contentDescription = null)
-                        Spacer(Modifier.width(8.dp))
+                        Spacer(Modifier.width(dimensionResource(R.dimen.spacing_medium)))
                         Text(stringResource(R.string.fcm_button_manage_devices))
                     }
                 }
 
                 // Dry Run
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Checkbox(
-                        checked = state.isDryRun,
-                        onCheckedChange = { viewModel.handleAction(FcmAction.UpdateDryRun(it)) }
-                    )
-                    Text(stringResource(R.string.fcm_dry_run_label))
+                    if (!state.isScheduled) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Checkbox(
+                                checked = state.isDryRun,
+                                onCheckedChange = { viewModel.handleAction(FcmAction.UpdateDryRun(it)) }
+                            )
+                            Text(stringResource(R.string.fcm_dry_run_label))
+                        }
                 }
 
-                Spacer(modifier = Modifier.height(32.dp))
+                }
+
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.fab_content_padding)))
             }
         }
 
@@ -256,7 +431,12 @@ fun FcmScreen(
         if (showConfirmSendDialog) {
             AlertDialog(
                 onDismissRequest = { showConfirmSendDialog = false },
-                title = { Text(stringResource(R.string.fcm_confirm_send_title)) },
+                title = {
+                    Text(
+                        if (state.isScheduled) stringResource(R.string.fcm_send_scheduled_button)
+                        else stringResource(R.string.fcm_confirm_send_title)
+                    )
+                },
                 text = { Text(stringResource(R.string.fcm_confirm_send_message)) },
                 confirmButton = {
                     TextButton(onClick = {
@@ -265,12 +445,37 @@ fun FcmScreen(
                     }) {
                         Text(
                             stringResource(R.string.broadcast_dialog_button_confirm),
-                            color = MaterialTheme.colorScheme.error
+                            color = if (state.isScheduled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showConfirmSendDialog = false }) {
+                        Text(stringResource(R.string.broadcast_dialog_button_cancel))
+                    }
+                }
+            )
+        }
+
+        if (showConfirmClearDialog) {
+            AlertDialog(
+                onDismissRequest = { showConfirmClearDialog = false },
+                title = { Text(stringResource(R.string.fcm_confirm_clear_title)) },
+                text = { Text(stringResource(R.string.fcm_confirm_clear_message)) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        viewModel.handleAction(FcmAction.ClearForm)
+                        showConfirmClearDialog = false
+                    }) {
+                        Text(
+                            stringResource(R.string.broadcast_dialog_button_confirm),
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showConfirmClearDialog = false }) {
                         Text(stringResource(R.string.broadcast_dialog_button_cancel))
                     }
                 }
@@ -379,7 +584,7 @@ fun TargetSelector(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        com.krumin.tonguecoinsmanager.domain.model.Platform.entries.forEach { platform ->
+                        Platform.entries.forEach { platform ->
                             val isSelected =
                                 (selectedTarget as? NotificationTarget.Topic)?.name == platform.name.lowercase() ||
                                         (selectedTarget as? NotificationTarget.Topic)?.name == "all"
@@ -398,7 +603,7 @@ fun TargetSelector(
                                 },
                                 label = {
                                     Text(
-                                        if (platform == com.krumin.tonguecoinsmanager.domain.model.Platform.ANDROID) stringResource(
+                                        if (platform == Platform.ANDROID) stringResource(
                                             R.string.platform_android
                                         ) else stringResource(R.string.platform_ios)
                                     )
@@ -528,25 +733,25 @@ fun ManageDevicesDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(max = 400.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                    .heightIn(max = dimensionResource(R.dimen.broadcast_preview_height)),
+                verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_medium))
             ) {
                 devices.forEach { device ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .border(
-                                1.dp,
+                                dimensionResource(R.dimen.stroke_thin),
                                 MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                                RoundedCornerShape(8.dp)
+                                RoundedCornerShape(dimensionResource(R.dimen.card_radius_medium))
                             )
-                            .padding(8.dp),
+                            .padding(dimensionResource(R.dimen.spacing_medium)),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(text = device.name, fontWeight = FontWeight.Bold)
                             Text(
-                                text = device.token,
+                                text = device.token.takeLast(10) + "...",
                                 style = MaterialTheme.typography.labelSmall,
                                 maxLines = 1
                             )
@@ -566,7 +771,7 @@ fun ManageDevicesDialog(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(dimensionResource(R.dimen.spacing_medium)))
                     Text(stringResource(R.string.fcm_dialog_add_device_title))
                 }
             }
@@ -589,7 +794,7 @@ fun AddDeviceDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.fcm_dialog_add_device_title)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_medium))) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -632,14 +837,19 @@ fun SelectDeviceDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(max = 400.dp)
+                    .heightIn(max = dimensionResource(R.dimen.broadcast_preview_height))
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_medium))
             ) {
                 devices.forEach { device ->
                     ListItem(
                         headlineContent = { Text(device.name) },
-                        supportingContent = { Text(device.token, maxLines = 1) },
+                        supportingContent = {
+                            Text(
+                                device.token.takeLast(10) + "...",
+                                maxLines = 1
+                            )
+                        },
                         modifier = Modifier.clickable { onSelect(device) }
                     )
                 }
@@ -650,4 +860,100 @@ fun SelectDeviceDialog(
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.broadcast_dialog_button_cancel)) }
         }
     )
+}
+
+@Composable
+fun AdvancedSettingsSection(
+    state: FcmState,
+    expanded: Boolean,
+    onToggle: () -> Unit,
+    onPriorityChanged: (FcmPriority) -> Unit,
+    onChannelIdChanged: (String?) -> Unit,
+    onSoundToggle: (Boolean) -> Unit,
+    onBadgeChanged: (Int?) -> Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onToggle() }
+                .padding(vertical = dimensionResource(R.dimen.spacing_medium)),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            FcmHeader(stringResource(R.string.fcm_advanced_settings_header))
+            Icon(
+                if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+
+        AnimatedVisibility(
+            visible = expanded,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically()
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(dimensionResource(R.dimen.spacing_medium)),
+                verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_large))
+            ) {
+                // Priority
+                Column {
+                    Text(
+                        stringResource(R.string.fcm_priority_label),
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_medium))) {
+                        FilterChip(
+                            selected = state.priority == FcmPriority.HIGH,
+                            onClick = { onPriorityChanged(FcmPriority.HIGH) },
+                            label = { Text(stringResource(R.string.fcm_priority_high)) }
+                        )
+                        FilterChip(
+                            selected = state.priority == FcmPriority.NORMAL,
+                            onClick = { onPriorityChanged(FcmPriority.NORMAL) },
+                            label = { Text(stringResource(R.string.fcm_priority_normal)) }
+                        )
+                    }
+                }
+
+                // Channel ID
+                OutlinedTextField(
+                    value = state.androidChannelId ?: "",
+                    onValueChange = { onChannelIdChanged(it.ifBlank { null }) },
+                    label = { Text(stringResource(R.string.fcm_channel_id_label)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                // Sound Toggle
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(stringResource(R.string.fcm_sound_label))
+                    androidx.compose.material3.Switch(
+                        checked = state.soundEnabled,
+                        onCheckedChange = onSoundToggle
+                    )
+                }
+
+                // Badge Count
+                OutlinedTextField(
+                    value = state.badgeCount?.toString() ?: "",
+                    onValueChange = { onBadgeChanged(it.toIntOrNull()) },
+                    label = { Text(stringResource(R.string.fcm_badge_count_label)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                    )
+                )
+            }
+        }
+    }
 }

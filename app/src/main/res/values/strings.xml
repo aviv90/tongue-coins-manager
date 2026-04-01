@@ -143,7 +143,7 @@
 
     <!-- FCM Screen -->
     <string name="fcm_title_screen">שליחת הודעת Push</string>
-    <string name="fcm_header_notification">תוכן המודעה</string>
+    <string name="fcm_header_notification">תוכן ההודעה</string>
     <string name="fcm_field_title_label">כותרת ההודעה</string>
     <string name="fcm_field_body_label">גוף ההודעה</string>
     <string name="fcm_field_image_url_label">URL של תמונה (אופציונלי)</string>
@@ -159,7 +159,7 @@
     <string name="fcm_data_value_placeholder">ערך (Value)</string>
     <string name="fcm_button_add_data">הוסף שדה</string>
     <string name="fcm_header_test_devices">מכשירי טסט</string>
-    <string name="fcm_button_send_test">שלח הודעת בדיקה</string>
+    <string name="fcm_button_send_test">שלח בדיקה</string>
     <string name="fcm_button_manage_devices">נהל מכשירים</string>
     <string name="fcm_button_send_now">שלח עכשיו לכולם</string>
     <string name="fcm_dry_run_label">מצב בדיקה (Dry Run - ללא שליחה בפועל)</string>
@@ -169,7 +169,28 @@
     <string name="fcm_error_title_required">חובה להזין כותרת</string>
     <string name="fcm_error_body_required">חובה להזין גוף הודעה</string>
     <string name="fcm_success_sent">ההודעה נשלחה בהצלחה!</string>
+    <string name="fcm_success_scheduled">ההודעה תוזמנה בהצלחה!</string>
     <string name="fcm_success_dry_run">הבדיקה עברה בהצלחה (Dry Run)</string>
+    <string name="fcm_error_generation_failed">ג׳ינרוט התוכן נכשל. נסה שוב.</string>
+    <string name="fcm_idea_prompt_label">רעיון להודעה (עבור Gemini)</string>
+    <string name="fcm_idea_prompt_placeholder">למשל: תזכורת לבוא לשחק ולקבל בונוס</string>
+    <string name="fcm_generate_button_content_description">ג׳נרט תוכן באמצעות AI</string>
+    <string name="fcm_advanced_settings_header">הגדרות מתקדמות (Advanced)</string>
+    <string name="fcm_priority_label">עדיפות (Priority)</string>
+    <string name="fcm_priority_high">גבוהה (High)</string>
+    <string name="fcm_priority_normal">רגילה (Normal)</string>
+    <string name="fcm_channel_id_label">מזהה ערוץ (Android Channel ID)</string>
+    <string name="fcm_sound_label">צליל הודעה (Sound)</string>
+    <string name="fcm_badge_count_label">Badge Count (iOS)</string>
+    <string name="fcm_header_scheduling">תזמון שליחה</string>
+    <string name="fcm_field_image_url_placeholder">https://example.com/image.jpg</string>
+    <string name="fcm_confirm_send_token_title">שליחה למכשיר בדיקה</string>
+    <string name="fcm_schedule_label">תזמון הודעה לזמן עתידי</string>
+    <string name="fcm_select_time_button">בחר שעה</string>
+    <string name="fcm_send_scheduled_button">תזמן שליחה</string>
+    <string name="fcm_clear_form_button">נקה טופס</string>
+    <string name="fcm_confirm_clear_title">ניקוי טופס</string>
+    <string name="fcm_confirm_clear_message">האם אתה בטוח שברצונך לנקות את כל השדות?</string>
     <string name="fcm_confirm_send_title">אישור שליחה המונית</string>
     <string name="fcm_confirm_send_message">האם אתה בטוח שברצונך לשלוח את ההודעה לכל המשתמשים ביעד הנבחר? פעולה זו אינה ניתנת לביטול.</string>
 </resources>

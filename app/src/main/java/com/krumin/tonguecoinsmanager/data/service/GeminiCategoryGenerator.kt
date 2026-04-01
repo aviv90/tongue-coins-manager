@@ -7,6 +7,7 @@ import com.google.firebase.ai.ai
 import com.google.firebase.ai.type.GenerateContentResponse
 import com.google.firebase.ai.type.GenerativeBackend
 import com.google.firebase.ai.type.generationConfig
+import com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig
 import com.krumin.tonguecoinsmanager.data.infrastructure.PromptTemplates
 import com.krumin.tonguecoinsmanager.domain.model.PhotoMetadata
 import com.krumin.tonguecoinsmanager.domain.service.CategoryGenerator
@@ -23,7 +24,7 @@ class GeminiCategoryGenerator(
 
     private val model: GenerativeModel by lazy {
         Firebase.ai(backend = GenerativeBackend.googleAI()).generativeModel(
-            modelName = "gemini-3-flash-preview",
+            modelName = AppConfig.Gemini.MODEL_FLASH,
             generationConfig = generationConfig {
                 temperature = 1.0f
                 topP = 0.95f

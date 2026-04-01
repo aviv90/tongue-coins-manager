@@ -29,11 +29,22 @@ object AppConfig {
         const val COLLECTION_DAILY_RIDDLES = "daily_riddles"
         const val DATABASE_ID = "tongue-coins"
         const val COLLECTION_APP_BROADCASTS = "app_broadcasts"
+        const val COLLECTION_SCHEDULEED_FCM = "scheduled_fcm"
         const val DOCUMENT_CURRENT = "current"
         const val DOCUMENT_TEST = "test"
         const val BROADCAST_ID_PREFIX = "daily-"
         const val BROADCAST_ID_SUFFIX = "-1"
     }
 
+    object Gemini {
+        const val MODEL_FLASH = "gemini-3-flash-preview"
+        const val MODEL_PRO_IMAGE = "gemini-3-pro-image-preview"
+    }
+
+    object Fcm {
+        const val SCOPE = "https://www.googleapis.com/auth/firebase.messaging"
+        const val BASE_URL = "https://fcm.googleapis.com/v1/projects"
+        const val CONTENT_TYPE_JSON = "application/json"
+    }
 }
 

@@ -10,6 +10,10 @@ interface FcmRepository {
         dryRun: Boolean = false
     ): Result<Unit>
 
+    suspend fun scheduleNotification(
+        notification: FcmNotification
+    ): Result<Unit>
+
     // Test Devices
     fun getTestDevices(): Flow<List<TestDevice>>
     suspend fun addTestDevice(device: TestDevice)

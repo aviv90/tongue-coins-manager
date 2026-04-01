@@ -10,6 +10,7 @@ import com.krumin.tonguecoinsmanager.domain.usecase.dailyriddle.GetDailyRiddleUs
 import com.krumin.tonguecoinsmanager.domain.usecase.dailyriddle.ResetDailyRiddleUseCase
 import com.krumin.tonguecoinsmanager.domain.usecase.dailyriddle.SetDailyRiddleUseCase
 import com.krumin.tonguecoinsmanager.util.UiText
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -30,6 +31,7 @@ data class DailyRiddleState(
     val error: UiText? = null
 )
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class DailyRiddleViewModel(
     private val getDailyRiddleUseCase: GetDailyRiddleUseCase,
     private val setDailyRiddleUseCase: SetDailyRiddleUseCase,
