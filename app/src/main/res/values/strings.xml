@@ -134,4 +134,9 @@
     <string name="content_desc_daily_riddle">ניהול חידה יומית</string>
     <string name="content_desc_daily_broadcast">ניהול הודעה יומית</string>
     <string name="content_desc_select_date">בחר תאריך</string>
+    <string name="broadcast_copy_to_prod_button">העתק לפרודקשן</string>
+    <string name="broadcast_copy_to_prod_confirm_title">העתק לסביבת פרודקשן</string>
+    <string name="broadcast_copy_to_prod_confirm_message">האם אתה בטוח שברצונך להעתיק את כל שדות ההודעה מסביבת הטסט לסביבת הפרודקשן? ההודעה הנוכחית בפרודקשן תידרס.</string>
+    <string name="success_broadcast_copied">המידע הועתק בהצלחה לסביבת הפרודקשן</string>
+    <string name="broadcast_generate_id_content_description">ג׳נרט מזהה אוטומטי</string>
 </resources>

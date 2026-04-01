@@ -31,6 +31,8 @@ object AppConfig {
         const val COLLECTION_APP_BROADCASTS = "app_broadcasts"
         const val DOCUMENT_CURRENT = "current"
         const val DOCUMENT_TEST = "test"
+        const val BROADCAST_ID_PREFIX = "daily-"
+        const val BROADCAST_ID_SUFFIX = "-1"
     }
 
 }

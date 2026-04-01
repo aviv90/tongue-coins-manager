@@ -3,6 +3,7 @@ package com.krumin.tonguecoinsmanager.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.krumin.tonguecoinsmanager.R
+import com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig
 import com.krumin.tonguecoinsmanager.domain.model.Broadcast
 import com.krumin.tonguecoinsmanager.domain.model.Environment
 import com.krumin.tonguecoinsmanager.domain.repository.BroadcastRepository
@@ -123,7 +124,7 @@ class BroadcastViewModel(
                     val dateFormat =
                         java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
                     val dateStr = dateFormat.format(java.util.Date())
-                    _id.value = "daily-$dateStr-1"
+                    _id.value = "${AppConfig.Firestore.BROADCAST_ID_PREFIX}${dateStr}${AppConfig.Firestore.BROADCAST_ID_SUFFIX}"
                 }
             } catch (e: Exception) {
                 _error.value =
@@ -199,6 +200,44 @@ class BroadcastViewModel(
                 _isLoading.value = false
             }
         }
+    }
+
+    fun onCopyToProduction() {
+        viewModelScope.launch {
+            val currentState = state.value
+            if (!currentState.isValid) {
+                _error.value = UiText.StringResource(R.string.error_broadcast_invalid)
+                return@launch
+            }
+
+            _isLoading.value = true
+            _saveSuccess.value = false
+            try {
+                val broadcast = Broadcast(
+                    id = currentState.id,
+                    title = currentState.title,
+                    body = currentState.body,
+                    imageUrl = currentState.imageUrl,
+                    ctaText = currentState.ctaText,
+                    ctaUrl = currentState.ctaUrl,
+                    disabled = currentState.disabled
+                )
+                repository.saveBroadcast(broadcast, Environment.PRODUCTION)
+                _saveSuccess.value = true
+                _error.value = null
+            } catch (e: Exception) {
+                _error.value =
+                    UiText.StringResource(R.string.error_broadcast_save, e.message ?: "Unknown")
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun onGenerateId() {
+        val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+        val dateStr = dateFormat.format(java.util.Date())
+        _id.value = "${AppConfig.Firestore.BROADCAST_ID_PREFIX}${dateStr}${AppConfig.Firestore.BROADCAST_ID_SUFFIX}"
     }
 
     fun clearError() {

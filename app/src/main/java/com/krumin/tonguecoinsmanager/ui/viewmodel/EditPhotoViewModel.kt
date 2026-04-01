@@ -29,6 +29,7 @@ data class EditState(
     val generatedCategories: List<String>? = null,
     val pendingAiImage: File? = null, // Waiting for user approval
     val confirmedAiImage: File? = null, // User approved this image
+    val draftImage: File? = null, // Local image from persistent draft
     val validationErrors: Map<String, Int> = emptyMap() // Field name to error string resource ID
 )
 
@@ -195,7 +196,19 @@ class EditPhotoViewModel(
                     null -> photos.find { it.id == id }
                 }
 
-                _state.update { it.copy(isLoading = false, photo = photo) }
+                val draftImage = when (pendingChange) {
+                    is PendingChange.Add -> pendingChange.imageFile
+                    is PendingChange.Edit -> pendingChange.newImageFile
+                    else -> null
+                }
+
+                _state.update { 
+                    it.copy(
+                        isLoading = false, 
+                        photo = photo,
+                        draftImage = draftImage
+                    ) 
+                }
             } catch (e: Exception) {
                 _state.update {
                     it.copy(

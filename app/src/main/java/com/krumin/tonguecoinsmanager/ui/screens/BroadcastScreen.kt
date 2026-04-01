@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -13,15 +14,19 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -63,6 +68,7 @@ fun BroadcastScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val context = androidx.compose.ui.platform.LocalContext.current
     var showSaveDialog by remember { mutableStateOf(false) }
+    var showCopyDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.saveSuccess) {
         if (state.saveSuccess) {
@@ -96,6 +102,27 @@ fun BroadcastScreen(
                 },
                 dismissButton = {
                     TextButton(onClick = { showSaveDialog = false }) {
+                        Text(stringResource(R.string.broadcast_dialog_button_cancel))
+                    }
+                }
+            )
+        }
+
+        if (showCopyDialog) {
+            AlertDialog(
+                onDismissRequest = { showCopyDialog = false },
+                title = { Text(stringResource(R.string.broadcast_copy_to_prod_confirm_title)) },
+                text = { Text(stringResource(R.string.broadcast_copy_to_prod_confirm_message)) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        viewModel.onCopyToProduction()
+                        showCopyDialog = false
+                    }) {
+                        Text(stringResource(R.string.broadcast_dialog_button_confirm))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showCopyDialog = false }) {
                         Text(stringResource(R.string.broadcast_dialog_button_cancel))
                     }
                 }
@@ -154,7 +181,8 @@ fun BroadcastScreen(
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_medium))
+                    horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_medium)),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     FilterChip(
                         selected = state.selectedEnvironment == Environment.PRODUCTION,
@@ -188,7 +216,7 @@ fun BroadcastScreen(
                     )
                 }
 
-                Divider()
+                HorizontalDivider()
 
                 // Settings Section
                 Text(
@@ -203,6 +231,14 @@ fun BroadcastScreen(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     isError = state.id.trim().isEmpty(),
+                    trailingIcon = {
+                        IconButton(onClick = viewModel::onGenerateId) {
+                            Icon(
+                                imageVector = Icons.Default.AutoFixHigh,
+                                contentDescription = stringResource(R.string.broadcast_generate_id_content_description)
+                            )
+                        }
+                    },
                     supportingText = {
                         if (state.id.trim().isEmpty()) {
                             Text(
@@ -227,7 +263,7 @@ fun BroadcastScreen(
                     )
                 }
 
-                Divider()
+                HorizontalDivider()
 
                 // Content Section
                 Text(
@@ -271,7 +307,7 @@ fun BroadcastScreen(
                     placeholder = { Text(stringResource(R.string.broadcast_image_url_placeholder)) }
                 )
 
-                Divider()
+                HorizontalDivider()
 
                 // CTA Section
                 Text(
@@ -305,6 +341,33 @@ fun BroadcastScreen(
                         }
                     }
                 )
+
+                if (state.selectedEnvironment == Environment.TEST) {
+                    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_medium)))
+                    Button(
+                        onClick = { showCopyDialog = true },
+                        enabled = !state.isLoading && state.isValid,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(dimensionResource(R.dimen.button_height_large)),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        ),
+                        shape = MaterialTheme.shapes.medium
+                    ) {
+                        Icon(
+                            Icons.Default.ContentCopy,
+                            contentDescription = null,
+                            modifier = Modifier.size(dimensionResource(R.dimen.icon_size_small))
+                        )
+                        Spacer(Modifier.width(dimensionResource(R.dimen.spacing_medium)))
+                        Text(
+                            text = stringResource(R.string.broadcast_copy_to_prod_button),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                }
             }
         }
     }
