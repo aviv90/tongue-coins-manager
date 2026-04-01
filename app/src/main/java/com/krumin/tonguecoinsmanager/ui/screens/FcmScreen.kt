@@ -78,7 +78,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.unit.dp
+import com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig
 import coil.compose.AsyncImage
 import com.krumin.tonguecoinsmanager.R
 import com.krumin.tonguecoinsmanager.domain.model.FcmPriority
@@ -114,7 +114,7 @@ fun FcmScreen(
             context,
             { _, year, month, day ->
                 val formatted =
-                    String.format(java.util.Locale.US, "%04d-%02d-%02d", year, month + 1, day)
+                    String.format(java.util.Locale.US, context.getString(R.string.fcm_date_format_mask), year, month + 1, day)
                 viewModel.handleAction(FcmAction.UpdateScheduledDate(formatted))
             },
             calendar.get(java.util.Calendar.YEAR),
@@ -127,7 +127,7 @@ fun FcmScreen(
         TimePickerDialog(
             context,
             { _, hour, minute ->
-                val formatted = String.format(java.util.Locale.US, "%02d:%02d", hour, minute)
+                val formatted = String.format(java.util.Locale.US, context.getString(R.string.fcm_time_format_mask), hour, minute)
                 viewModel.handleAction(FcmAction.UpdateScheduledTime(formatted))
             },
             calendar.get(java.util.Calendar.HOUR_OF_DAY),
@@ -173,7 +173,7 @@ fun FcmScreen(
                                 modifier = Modifier
                                     .padding(dimensionResource(R.dimen.spacing_large))
                                     .size(dimensionResource(R.dimen.icon_size_small)),
-                                strokeWidth = 2.dp
+                                strokeWidth = dimensionResource(R.dimen.stroke_small)
                             )
                         } else {
                             val layoutDirection = LocalLayoutDirection.current
@@ -187,7 +187,7 @@ fun FcmScreen(
                                     contentDescription = null,
                                     modifier = Modifier.graphicsLayer {
                                         rotationY =
-                                            if (layoutDirection == LayoutDirection.Rtl) 180f else 0f
+                                            if (layoutDirection == LayoutDirection.Rtl) AppConfig.Ui.FLIP_ROTATION else 0f
                                     },
                                     tint = MaterialTheme.colorScheme.primary
                                 )
@@ -204,7 +204,7 @@ fun FcmScreen(
                         brush = Brush.verticalGradient(
                             colors = listOf(
                                 MaterialTheme.colorScheme.surface,
-                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppConfig.Ui.ALPHA_MEDIUM)
                             )
                         )
                     )
@@ -322,8 +322,8 @@ fun FcmScreen(
                         modifier = Modifier.fillMaxWidth(),
                         colors = androidx.compose.material3.CardDefaults.cardColors(
                             containerColor = if (state.isScheduled) MaterialTheme.colorScheme.primaryContainer.copy(
-                                alpha = 0.5f
-                            ) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                alpha = AppConfig.Ui.ALPHA_MEDIUM
+                            ) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppConfig.Ui.ALPHA_MEDIUM)
                         )
                     ) {
                         Column(modifier = Modifier.padding(dimensionResource(R.dimen.spacing_medium))) {
@@ -527,7 +527,7 @@ fun FcmHeader(text: String) {
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(top = 8.dp)
+        modifier = Modifier.padding(top = dimensionResource(R.dimen.spacing_medium))
     )
 }
 
@@ -545,8 +545,7 @@ fun TargetSelector(
             }
         )
     }
-
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_medium))) {
         Row(modifier = Modifier.fillMaxWidth()) {
             val options = listOf(
                 stringResource(R.string.fcm_target_topic),
@@ -567,14 +566,14 @@ fun TargetSelector(
                     label = { Text(label) },
                     modifier = Modifier
                         .weight(1f)
-                        .padding(horizontal = 2.dp)
+                        .padding(horizontal = dimensionResource(R.dimen.spacing_tiny))
                 )
             }
         }
 
         when (selectedType) {
             0 -> {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_medium))) {
                     Text(
                         text = stringResource(R.string.supported_platforms_label),
                         style = MaterialTheme.typography.labelMedium,
@@ -582,7 +581,7 @@ fun TargetSelector(
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_large))
                     ) {
                         Platform.entries.forEach { platform ->
                             val isSelected =
@@ -613,7 +612,7 @@ fun TargetSelector(
                                         Icon(
                                             Icons.Default.Check,
                                             contentDescription = null,
-                                            modifier = Modifier.size(16.dp)
+                                            modifier = Modifier.size(dimensionResource(R.dimen.icon_size_tiny))
                                         )
                                     }
                                 } else null
@@ -655,14 +654,13 @@ fun DataPayloadEditor(
 ) {
     var newKey by remember { mutableStateOf("") }
     var newValue by remember { mutableStateOf("") }
-
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_medium))) {
         payload.forEach { (k, v) ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp))
-                    .padding(8.dp),
+                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(dimensionResource(R.dimen.spacing_medium)))
+                    .padding(dimensionResource(R.dimen.spacing_medium)),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
@@ -682,7 +680,7 @@ fun DataPayloadEditor(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_medium)),
             verticalAlignment = Alignment.CenterVertically
         ) {
             OutlinedTextField(
@@ -742,7 +740,7 @@ fun ManageDevicesDialog(
                             .fillMaxWidth()
                             .border(
                                 dimensionResource(R.dimen.stroke_thin),
-                                MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                                MaterialTheme.colorScheme.outline.copy(alpha = AppConfig.Ui.ALPHA_LOW),
                                 RoundedCornerShape(dimensionResource(R.dimen.card_radius_medium))
                             )
                             .padding(dimensionResource(R.dimen.spacing_medium)),

@@ -55,6 +55,7 @@ object AppConfig {
     object Ui {
         const val ALPHA_MEDIUM = 0.5f
         const val ALPHA_LOW = 0.3f
+        const val FLIP_ROTATION = 180f
     }
 }
 
