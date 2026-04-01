@@ -35,14 +35,14 @@ data class FcmState(
 
     // Advanced Fields
     val priority: FcmPriority = FcmPriority.HIGH,
-    val androidChannelId: String? = "general",
+    val androidChannelId: String? = com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Fcm.DEFAULT_CHANNEL_ID,
     val soundEnabled: Boolean = true,
     val badgeCount: Int? = null,
 
     // Scheduling
     val isScheduled: Boolean = false,
-    val scheduledDate: String = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date()),
-    val scheduledTime: String = SimpleDateFormat("HH:mm", Locale.US).format(Date())
+    val scheduledDate: String = SimpleDateFormat(com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Fcm.DATE_FORMAT, Locale.US).format(Date()),
+    val scheduledTime: String = SimpleDateFormat(com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Fcm.TIME_FORMAT, Locale.US).format(Date())
 )
 
 sealed interface FcmAction {
@@ -214,7 +214,7 @@ class FcmViewModel(
 
     private fun parseScheduledTime(datePart: String, timePart: String): Long? {
         return try {
-            val format = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US)
+            val format = SimpleDateFormat(com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Fcm.DATETIME_FORMAT, Locale.US)
             val date = format.parse("$datePart $timePart")
             date?.time
         } catch (e: Exception) {

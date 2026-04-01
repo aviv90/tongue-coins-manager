@@ -32,4 +32,8 @@
     <dimen name="broadcast_preview_height">150dp</dimen>
     <dimen name="riddle_image_size">60dp</dimen>
     <dimen name="riddle_item_image_size">50dp</dimen>
+
+    <!-- Alpha Values -->
+    <item name="alpha_medium" format="float" type="dimen">0.5</item>
+    <item name="alpha_low" format="float" type="dimen">0.3</item>
 </resources>

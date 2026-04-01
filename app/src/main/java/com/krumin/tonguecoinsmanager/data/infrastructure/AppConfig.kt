@@ -45,6 +45,16 @@ object AppConfig {
         const val SCOPE = "https://www.googleapis.com/auth/firebase.messaging"
         const val BASE_URL = "https://fcm.googleapis.com/v1/projects"
         const val CONTENT_TYPE_JSON = "application/json"
+        
+        const val DEFAULT_CHANNEL_ID = "general"
+        const val DATE_FORMAT = "yyyy-MM-dd"
+        const val TIME_FORMAT = "HH:mm"
+        const val DATETIME_FORMAT = "yyyy-MM-dd HH:mm"
+    }
+
+    object Ui {
+        const val ALPHA_MEDIUM = 0.5f
+        const val ALPHA_LOW = 0.3f
     }
 }
 
