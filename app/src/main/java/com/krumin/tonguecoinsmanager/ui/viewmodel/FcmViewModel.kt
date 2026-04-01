@@ -41,8 +41,14 @@ data class FcmState(
 
     // Scheduling
     val isScheduled: Boolean = false,
-    val scheduledDate: String = SimpleDateFormat(com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Fcm.DATE_FORMAT, Locale.US).format(Date()),
-    val scheduledTime: String = SimpleDateFormat(com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Fcm.TIME_FORMAT, Locale.US).format(Date())
+    val scheduledDate: String = SimpleDateFormat(
+        com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Fcm.DATE_FORMAT,
+        Locale.US
+    ).format(Date()),
+    val scheduledTime: String = SimpleDateFormat(
+        com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Fcm.TIME_FORMAT,
+        Locale.US
+    ).format(Date())
 )
 
 sealed interface FcmAction {
@@ -214,7 +220,10 @@ class FcmViewModel(
 
     private fun parseScheduledTime(datePart: String, timePart: String): Long? {
         return try {
-            val format = SimpleDateFormat(com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Fcm.DATETIME_FORMAT, Locale.US)
+            val format = SimpleDateFormat(
+                com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Fcm.DATETIME_FORMAT,
+                Locale.US
+            )
             val date = format.parse("$datePart $timePart")
             date?.time
         } catch (e: Exception) {

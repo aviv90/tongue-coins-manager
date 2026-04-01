@@ -78,9 +78,9 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
-import com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig
 import coil.compose.AsyncImage
 import com.krumin.tonguecoinsmanager.R
+import com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig
 import com.krumin.tonguecoinsmanager.domain.model.FcmPriority
 import com.krumin.tonguecoinsmanager.domain.model.NotificationTarget
 import com.krumin.tonguecoinsmanager.domain.model.Platform
@@ -114,7 +114,13 @@ fun FcmScreen(
             context,
             { _, year, month, day ->
                 val formatted =
-                    String.format(java.util.Locale.US, context.getString(R.string.fcm_date_format_mask), year, month + 1, day)
+                    String.format(
+                        java.util.Locale.US,
+                        context.getString(R.string.fcm_date_format_mask),
+                        year,
+                        month + 1,
+                        day
+                    )
                 viewModel.handleAction(FcmAction.UpdateScheduledDate(formatted))
             },
             calendar.get(java.util.Calendar.YEAR),
@@ -127,7 +133,12 @@ fun FcmScreen(
         TimePickerDialog(
             context,
             { _, hour, minute ->
-                val formatted = String.format(java.util.Locale.US, context.getString(R.string.fcm_time_format_mask), hour, minute)
+                val formatted = String.format(
+                    java.util.Locale.US,
+                    context.getString(R.string.fcm_time_format_mask),
+                    hour,
+                    minute
+                )
                 viewModel.handleAction(FcmAction.UpdateScheduledTime(formatted))
             },
             calendar.get(java.util.Calendar.HOUR_OF_DAY),
@@ -249,61 +260,61 @@ fun FcmScreen(
                         }
                     )
 
-                // Notification Content
-                FcmHeader(stringResource(R.string.fcm_header_notification))
+                    // Notification Content
+                    FcmHeader(stringResource(R.string.fcm_header_notification))
 
-                OutlinedTextField(
-                    value = state.title,
-                    onValueChange = { viewModel.handleAction(FcmAction.UpdateTitle(it)) },
-                    label = { Text(stringResource(R.string.fcm_field_title_label)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-
-                OutlinedTextField(
-                    value = state.body,
-                    onValueChange = { viewModel.handleAction(FcmAction.UpdateBody(it)) },
-                    label = { Text(stringResource(R.string.fcm_field_body_label)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    minLines = 2
-                )
-
-                OutlinedTextField(
-                    value = state.imageUrl ?: "",
-                    onValueChange = { viewModel.handleAction(FcmAction.UpdateImageUrl(it)) },
-                    label = { Text(stringResource(R.string.fcm_field_image_url_label)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    placeholder = { Text(stringResource(R.string.fcm_field_image_url_placeholder)) }
-                )
-
-                if (!state.imageUrl.isNullOrBlank()) {
-                    AsyncImage(
-                        model = state.imageUrl,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(dimensionResource(R.dimen.broadcast_preview_height))
-                            .clip(RoundedCornerShape(dimensionResource(R.dimen.card_radius_medium)))
-                            .background(MaterialTheme.colorScheme.surfaceVariant),
-                        contentScale = ContentScale.Fit
+                    OutlinedTextField(
+                        value = state.title,
+                        onValueChange = { viewModel.handleAction(FcmAction.UpdateTitle(it)) },
+                        label = { Text(stringResource(R.string.fcm_field_title_label)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
                     )
-                }
 
-                // Target
-                FcmHeader(stringResource(R.string.fcm_header_target))
-                TargetSelector(
-                    selectedTarget = state.target,
-                    onTargetSelected = { viewModel.handleAction(FcmAction.UpdateTarget(it)) }
-                )
+                    OutlinedTextField(
+                        value = state.body,
+                        onValueChange = { viewModel.handleAction(FcmAction.UpdateBody(it)) },
+                        label = { Text(stringResource(R.string.fcm_field_body_label)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 2
+                    )
 
-                // Data Payload
-                FcmHeader(stringResource(R.string.fcm_header_data))
-                DataPayloadEditor(
-                    payload = state.dataPayload,
-                    onAdd = { k, v -> viewModel.handleAction(FcmAction.AddDataPair(k, v)) },
-                    onRemove = { k -> viewModel.handleAction(FcmAction.RemoveDataPair(k)) }
-                )
+                    OutlinedTextField(
+                        value = state.imageUrl ?: "",
+                        onValueChange = { viewModel.handleAction(FcmAction.UpdateImageUrl(it)) },
+                        label = { Text(stringResource(R.string.fcm_field_image_url_label)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        placeholder = { Text(stringResource(R.string.fcm_field_image_url_placeholder)) }
+                    )
+
+                    if (!state.imageUrl.isNullOrBlank()) {
+                        AsyncImage(
+                            model = state.imageUrl,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(dimensionResource(R.dimen.broadcast_preview_height))
+                                .clip(RoundedCornerShape(dimensionResource(R.dimen.card_radius_medium)))
+                                .background(MaterialTheme.colorScheme.surfaceVariant),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
+
+                    // Target
+                    FcmHeader(stringResource(R.string.fcm_header_target))
+                    TargetSelector(
+                        selectedTarget = state.target,
+                        onTargetSelected = { viewModel.handleAction(FcmAction.UpdateTarget(it)) }
+                    )
+
+                    // Data Payload
+                    FcmHeader(stringResource(R.string.fcm_header_data))
+                    DataPayloadEditor(
+                        payload = state.dataPayload,
+                        onAdd = { k, v -> viewModel.handleAction(FcmAction.AddDataPair(k, v)) },
+                        onRemove = { k -> viewModel.handleAction(FcmAction.RemoveDataPair(k)) }
+                    )
 
                     // Advanced Settings
                     AdvancedSettingsSection(
@@ -380,34 +391,34 @@ fun FcmScreen(
                         }
                     }
 
-                // Test Devices
-                FcmHeader(stringResource(R.string.fcm_header_test_devices))
+                    // Test Devices
+                    FcmHeader(stringResource(R.string.fcm_header_test_devices))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_medium))
-                ) {
-                    Button(
-                        onClick = { showSelectDeviceDialog = true },
-                        modifier = Modifier.weight(1f),
-                        enabled = state.testDevices.isNotEmpty() && state.title.isNotBlank() && state.body.isNotBlank()
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_medium))
                     ) {
-                        Icon(Icons.Default.BugReport, contentDescription = null)
-                        Spacer(Modifier.width(dimensionResource(R.dimen.spacing_medium)))
-                        Text(stringResource(R.string.fcm_button_send_test))
+                        Button(
+                            onClick = { showSelectDeviceDialog = true },
+                            modifier = Modifier.weight(1f),
+                            enabled = state.testDevices.isNotEmpty() && state.title.isNotBlank() && state.body.isNotBlank()
+                        ) {
+                            Icon(Icons.Default.BugReport, contentDescription = null)
+                            Spacer(Modifier.width(dimensionResource(R.dimen.spacing_medium)))
+                            Text(stringResource(R.string.fcm_button_send_test))
+                        }
+
+                        OutlinedButton(
+                            onClick = { showManageDevicesDialog = true },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.Settings, contentDescription = null)
+                            Spacer(Modifier.width(dimensionResource(R.dimen.spacing_medium)))
+                            Text(stringResource(R.string.fcm_button_manage_devices))
+                        }
                     }
 
-                    OutlinedButton(
-                        onClick = { showManageDevicesDialog = true },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Icon(Icons.Default.Settings, contentDescription = null)
-                        Spacer(Modifier.width(dimensionResource(R.dimen.spacing_medium)))
-                        Text(stringResource(R.string.fcm_button_manage_devices))
-                    }
-                }
-
-                // Dry Run
+                    // Dry Run
                     if (!state.isScheduled) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -419,7 +430,7 @@ fun FcmScreen(
                             )
                             Text(stringResource(R.string.fcm_dry_run_label))
                         }
-                }
+                    }
 
                 }
 
@@ -659,7 +670,10 @@ fun DataPayloadEditor(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(dimensionResource(R.dimen.spacing_medium)))
+                    .background(
+                        MaterialTheme.colorScheme.surfaceVariant,
+                        RoundedCornerShape(dimensionResource(R.dimen.spacing_medium))
+                    )
                     .padding(dimensionResource(R.dimen.spacing_medium)),
                 verticalAlignment = Alignment.CenterVertically
             ) {
