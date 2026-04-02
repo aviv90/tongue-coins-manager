@@ -76,6 +76,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import coil.compose.AsyncImage
 import com.krumin.tonguecoinsmanager.R
@@ -568,7 +569,13 @@ fun TargetSelector(
                             2 -> onTargetSelected(NotificationTarget.Token(""))
                         }
                     },
-                    label = { Text(label) },
+                    label = {
+                        Text(
+                            text = label,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center
+                        )
+                    },
                     modifier = Modifier
                         .weight(1f)
                         .padding(horizontal = dimensionResource(R.dimen.spacing_tiny))
@@ -607,11 +614,14 @@ fun TargetSelector(
                                 },
                                 label = {
                                     Text(
-                                        if (platform == Platform.ANDROID) stringResource(
+                                        text = if (platform == Platform.ANDROID) stringResource(
                                             R.string.platform_android
-                                        ) else stringResource(R.string.platform_ios)
+                                        ) else stringResource(R.string.platform_ios),
+                                        modifier = Modifier.fillMaxWidth(),
+                                        textAlign = TextAlign.Center
                                     )
                                 },
+                                modifier = Modifier.weight(1f),
                                 leadingIcon = if (isSelected || (selectedTarget as? NotificationTarget.Topic)?.name == "all") {
                                     {
                                         Icon(
@@ -916,12 +926,26 @@ fun AdvancedSettingsSection(
                         FilterChip(
                             selected = state.priority == FcmPriority.HIGH,
                             onClick = { onPriorityChanged(FcmPriority.HIGH) },
-                            label = { Text(stringResource(R.string.fcm_priority_high)) }
+                            label = {
+                                Text(
+                                    text = stringResource(R.string.fcm_priority_high),
+                                    modifier = Modifier.fillMaxWidth(),
+                                    textAlign = TextAlign.Center
+                                )
+                            },
+                            modifier = Modifier.weight(1f)
                         )
                         FilterChip(
                             selected = state.priority == FcmPriority.NORMAL,
                             onClick = { onPriorityChanged(FcmPriority.NORMAL) },
-                            label = { Text(stringResource(R.string.fcm_priority_normal)) }
+                            label = {
+                                Text(
+                                    text = stringResource(R.string.fcm_priority_normal),
+                                    modifier = Modifier.fillMaxWidth(),
+                                    textAlign = TextAlign.Center
+                                )
+                            },
+                            modifier = Modifier.weight(1f)
                         )
                     }
                 }

@@ -148,9 +148,9 @@
     <string name="fcm_field_body_label">גוף ההודעה</string>
     <string name="fcm_field_image_url_label">URL של תמונה (אופציונלי)</string>
     <string name="fcm_header_target">יעד השליחה</string>
-    <string name="fcm_target_topic">נושא (Topic)</string>
-    <string name="fcm_target_condition">תנאי (Condition)</string>
-    <string name="fcm_target_token">טוקן ספציפי (Token)</string>
+    <string name="fcm_target_topic">Topic</string>
+    <string name="fcm_target_condition">Condition</string>
+    <string name="fcm_target_token">Token</string>
     <string name="fcm_field_topic_label">שם הנושא (למשל: all, ios, android)</string>
     <string name="fcm_field_condition_label">ביטוי תנאי (למשל: \'news\' in topics)</string>
     <string name="fcm_field_token_label">Device Registration Token</string>
