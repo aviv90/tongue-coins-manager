@@ -8,6 +8,7 @@ import com.google.cloud.firestore.FirestoreOptions
 import com.krumin.tonguecoinsmanager.BuildConfig
 import com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig
 import com.krumin.tonguecoinsmanager.data.local.AppDatabase
+import com.krumin.tonguecoinsmanager.data.local.DatabaseMigrations
 import com.krumin.tonguecoinsmanager.data.repository.BroadcastRepositoryImpl
 import com.krumin.tonguecoinsmanager.data.repository.DailyRiddleRepositoryImpl
 import com.krumin.tonguecoinsmanager.data.repository.FcmDraftRepository
@@ -48,9 +49,9 @@ val appModule = module {
         Room.databaseBuilder(
             androidContext(),
             AppDatabase::class.java,
-            "tongue_coins_db"
+            AppConfig.Persistence.ROOM_DATABASE_NAME
         )
-            .fallbackToDestructiveMigration(true)
+            .addMigrations(DatabaseMigrations.MIGRATION_1_2)
             .build()
     }
 

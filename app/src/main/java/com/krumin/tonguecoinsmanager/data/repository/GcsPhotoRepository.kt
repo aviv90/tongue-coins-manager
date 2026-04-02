@@ -52,13 +52,9 @@ class GcsPhotoRepository(
         .stateIn(repositoryScope, SharingStarted.Eagerly, emptyList())
 
     private val storage: Storage by lazy {
-        try {
-            val serviceAccountStream = context.assets.open(keyFileName)
-            val credentials = GoogleCredentials.fromStream(serviceAccountStream)
-            StorageOptions.newBuilder().setCredentials(credentials).build().service
-        } catch (e: Exception) {
-            StorageOptions.getDefaultInstance().service
-        }
+        val serviceAccountStream = context.assets.open(keyFileName)
+        val credentials = GoogleCredentials.fromStream(serviceAccountStream)
+        StorageOptions.newBuilder().setCredentials(credentials).build().service
     }
 
     private val json = Json {

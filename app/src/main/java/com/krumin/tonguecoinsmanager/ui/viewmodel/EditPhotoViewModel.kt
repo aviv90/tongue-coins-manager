@@ -10,6 +10,7 @@ import com.krumin.tonguecoinsmanager.domain.repository.PhotoRepository
 import com.krumin.tonguecoinsmanager.domain.service.CategoryGenerator
 import com.krumin.tonguecoinsmanager.domain.service.ImageEditor
 import com.krumin.tonguecoinsmanager.util.UiText
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -125,7 +126,7 @@ class EditPhotoViewModel(
                     )
                 }
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
+                if (e is CancellationException) throw e
                 _state.update {
                     it.copy(
                         isEditingImage = false,
@@ -167,7 +168,7 @@ class EditPhotoViewModel(
                     }
                 }
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
+                if (e is CancellationException) throw e
                 _state.update { it.copy(isGeneratingCategories = false) }
             }
         }
@@ -210,6 +211,7 @@ class EditPhotoViewModel(
                     )
                 }
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 _state.update {
                     it.copy(
                         isLoading = false,
@@ -262,6 +264,7 @@ class EditPhotoViewModel(
                 }
                 _state.update { it.copy(isLoading = false, isSuccess = true) }
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 _state.update {
                     it.copy(
                         isLoading = false,
@@ -280,6 +283,7 @@ class EditPhotoViewModel(
                 repository.deletePhoto(id, commit = false)
                 _state.update { it.copy(isLoading = false, isSuccess = true) }
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 _state.update {
                     it.copy(
                         isLoading = false,

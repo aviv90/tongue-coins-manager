@@ -47,7 +47,7 @@ class EditPhotoViewModelTest {
             newImageFile = null
         )
 
-        whenever(repository.getPhotos()).doReturn(listOf(serverPhoto))
+        doReturn(listOf(serverPhoto)).whenever(repository) { getPhotos() }
         whenever(repository.pendingChanges).thenReturn(MutableStateFlow(listOf(pendingChange)))
 
         val viewModel = EditPhotoViewModel(
@@ -57,11 +57,6 @@ class EditPhotoViewModelTest {
             photoId = photoId
         )
 
-        // Then
-        // Wait for initial load
-        // Note: In a real test we might need advanceUntilIdle() or similar if using UnconfinedTestDispatcher isn't enough
-
-        // This assertion is EXPECTED TO FAIL currently because the bug exists
         assertEquals("Draft Title", viewModel.state.value.photo?.title)
         assertEquals(
             listOf(Platform.ANDROID, Platform.IOS),

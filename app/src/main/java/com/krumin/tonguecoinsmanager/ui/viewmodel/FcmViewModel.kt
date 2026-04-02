@@ -1,6 +1,5 @@
 package com.krumin.tonguecoinsmanager.ui.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.krumin.tonguecoinsmanager.R
@@ -17,7 +16,9 @@ import com.krumin.tonguecoinsmanager.domain.usecase.fcm.GenerateFcmNotificationU
 import com.krumin.tonguecoinsmanager.domain.usecase.fcm.ManageTestDevicesUseCase
 import com.krumin.tonguecoinsmanager.domain.usecase.fcm.ScheduleFcmNotificationUseCase
 import com.krumin.tonguecoinsmanager.domain.usecase.fcm.SendFcmNotificationUseCase
+import com.krumin.tonguecoinsmanager.util.AppLogger
 import com.krumin.tonguecoinsmanager.util.UiText
+import com.krumin.tonguecoinsmanager.util.toFriendlyUiText
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -307,7 +308,7 @@ class FcmViewModel(
                 }
                 saveDraft()
             } else {
-                Log.e(TAG, "AI Content generation result is null")
+                AppLogger.e(TAG, "AI Content generation result is null")
                 _state.update {
                     it.copy(
                         isGenerating = false,
@@ -323,6 +324,28 @@ class FcmViewModel(
             val currentState = _state.value
             _state.update { it.copy(isLoading = true, error = null, success = null) }
 
+            val scheduledMillis = if (currentState.isScheduled) {
+                parseScheduledTime(currentState.scheduledDate, currentState.scheduledTime)
+            } else {
+                null
+            }
+
+            if (currentState.isScheduled && scheduledMillis == null) {
+                AppLogger.d(TAG, "Invalid schedule: ${currentState.scheduledDate} ${currentState.scheduledTime}")
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        error = UiText.StringResource(R.string.fcm_error_schedule_invalid),
+                        success = null
+                    )
+                }
+                return@launch
+            }
+
+            if (currentState.isScheduled) {
+                AppLogger.d(TAG, "Scheduling notification for timestamp: $scheduledMillis")
+            }
+
             val notification = FcmNotification(
                 title = currentState.title,
                 body = currentState.body,
@@ -332,18 +355,9 @@ class FcmViewModel(
                 androidChannelId = currentState.androidChannelId,
                 soundEnabled = currentState.soundEnabled,
                 badgeCount = currentState.badgeCount,
-                scheduledTime = if (currentState.isScheduled) {
-                    val time =
-                        parseScheduledTime(currentState.scheduledDate, currentState.scheduledTime)
-                    Log.d(
-                        TAG,
-                        "Scheduling notification for timestamp: $time (${currentState.scheduledDate} ${currentState.scheduledTime})"
-                    )
-                    time
-                } else null,
+                scheduledTime = scheduledMillis,
                 target = overrideTarget ?: when {
                     currentState.selectedPlatforms.size == 2 -> {
-                        // Everyone - Use "all" topic as it is confirmed to reach 2000+ users
                         NotificationTarget.Topic("all")
                     }
 
@@ -368,24 +382,23 @@ class FcmViewModel(
                 }
             )
 
-            Log.d(
+            AppLogger.d(
                 TAG,
-                "Sending notification with target: ${notification.target} (Override: ${overrideTarget != null})"
+                "Sending notification with target: ${notification.target} (override=${overrideTarget != null})"
             )
 
             val result = if (currentState.isScheduled) {
-                Log.i(TAG, "Executing ScheduleFcmUseCase")
+                AppLogger.d(TAG, "Executing ScheduleFcmUseCase")
                 scheduleFcmUseCase(notification)
             } else {
-                Log.i(TAG, "Executing SendFcmUseCase (Immediate)")
+                AppLogger.d(TAG, "Executing SendFcmUseCase (Immediate)")
                 sendFcmUseCase(notification, currentState.isDryRun)
             }
 
             _state.update {
                 it.copy(
                     isLoading = false,
-                    error = result.exceptionOrNull()
-                        ?.let { e -> UiText.DynamicString(e.message ?: "Unknown error") },
+                    error = result.exceptionOrNull()?.toFriendlyUiText(),
                     success = if (result.isSuccess) {
                         if (currentState.isScheduled) UiText.StringResource(R.string.fcm_success_scheduled)
                         else if (currentState.isDryRun) UiText.StringResource(R.string.fcm_success_dry_run)

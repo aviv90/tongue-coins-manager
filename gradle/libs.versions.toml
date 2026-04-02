@@ -44,7 +44,6 @@ androidx-compose-material3 = { group = "androidx.compose.material3", name = "mat
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutinesTest" }
 mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
-mockito-inline = { group = "org.mockito", name = "mockito-inline", version.ref = "mockito" }
 mockito-kotlin = { group = "org.mockito.kotlin", name = "mockito-kotlin", version.ref = "mockitoKotlin" }
 koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }
 koin-compose = { group = "io.insert-koin", name = "koin-androidx-compose", version.ref = "koin" }

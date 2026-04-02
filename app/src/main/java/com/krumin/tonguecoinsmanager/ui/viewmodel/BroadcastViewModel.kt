@@ -7,7 +7,9 @@ import com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig
 import com.krumin.tonguecoinsmanager.domain.model.Broadcast
 import com.krumin.tonguecoinsmanager.domain.model.Environment
 import com.krumin.tonguecoinsmanager.domain.repository.BroadcastRepository
+import com.krumin.tonguecoinsmanager.util.AppLogger
 import com.krumin.tonguecoinsmanager.util.UiText
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -51,6 +53,10 @@ data class BroadcastState(
 class BroadcastViewModel(
     private val repository: BroadcastRepository
 ) : ViewModel() {
+
+    companion object {
+        private const val TAG = "BroadcastViewModel"
+    }
 
     private val _id = MutableStateFlow("")
     private val _title = MutableStateFlow("")
@@ -128,8 +134,9 @@ class BroadcastViewModel(
                         "${AppConfig.Firestore.BROADCAST_ID_PREFIX}${dateStr}${AppConfig.Firestore.BROADCAST_ID_SUFFIX}"
                 }
             } catch (e: Exception) {
-                _error.value =
-                    UiText.StringResource(R.string.error_broadcast_load, e.message ?: "Unknown")
+                if (e is CancellationException) throw e
+                AppLogger.e(TAG, "loadBroadcast failed", e)
+                _error.value = UiText.StringResource(R.string.error_broadcast_load)
             } finally {
                 _isLoading.value = false
             }
@@ -195,8 +202,9 @@ class BroadcastViewModel(
                 _saveSuccess.value = true
                 _error.value = null
             } catch (e: Exception) {
-                _error.value =
-                    UiText.StringResource(R.string.error_broadcast_save, e.message ?: "Unknown")
+                if (e is CancellationException) throw e
+                AppLogger.e(TAG, "onSave failed", e)
+                _error.value = UiText.StringResource(R.string.error_broadcast_save)
             } finally {
                 _isLoading.value = false
             }
@@ -227,8 +235,9 @@ class BroadcastViewModel(
                 _saveSuccess.value = true
                 _error.value = null
             } catch (e: Exception) {
-                _error.value =
-                    UiText.StringResource(R.string.error_broadcast_save, e.message ?: "Unknown")
+                if (e is CancellationException) throw e
+                AppLogger.e(TAG, "onCopyToProduction failed", e)
+                _error.value = UiText.StringResource(R.string.error_broadcast_save)
             } finally {
                 _isLoading.value = false
             }

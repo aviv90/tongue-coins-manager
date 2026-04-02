@@ -9,7 +9,9 @@ import com.krumin.tonguecoinsmanager.domain.repository.PhotoRepository
 import com.krumin.tonguecoinsmanager.domain.usecase.dailyriddle.GetDailyRiddleUseCase
 import com.krumin.tonguecoinsmanager.domain.usecase.dailyriddle.ResetDailyRiddleUseCase
 import com.krumin.tonguecoinsmanager.domain.usecase.dailyriddle.SetDailyRiddleUseCase
+import com.krumin.tonguecoinsmanager.util.AppLogger
 import com.krumin.tonguecoinsmanager.util.UiText
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -38,6 +40,10 @@ class DailyRiddleViewModel(
     private val resetDailyRiddleUseCase: ResetDailyRiddleUseCase,
     private val photoRepository: PhotoRepository
 ) : ViewModel() {
+
+    companion object {
+        private const val TAG = "DailyRiddleViewModel"
+    }
 
     private val _selectedDate =
         MutableStateFlow(SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date()))
@@ -73,8 +79,9 @@ class DailyRiddleViewModel(
             try {
                 _availableRiddles.value = photoRepository.getPhotos()
             } catch (e: Exception) {
-                _error.value =
-                    UiText.StringResource(R.string.riddle_error_load, e.message ?: "Unknown")
+                if (e is CancellationException) throw e
+                AppLogger.e(TAG, "loadAvailableRiddles failed", e)
+                _error.value = UiText.StringResource(R.string.riddle_error_load)
             }
         }
     }
@@ -90,8 +97,9 @@ class DailyRiddleViewModel(
                 setDailyRiddleUseCase(_selectedDate.value, contentItemId)
                 _error.value = null // Clear error on success
             } catch (e: Exception) {
-                _error.value =
-                    UiText.StringResource(R.string.riddle_error_set, e.message ?: "Unknown")
+                if (e is CancellationException) throw e
+                AppLogger.e(TAG, "onSetRiddle failed", e)
+                _error.value = UiText.StringResource(R.string.riddle_error_set)
             } finally {
                 _isLoading.value = false
             }
@@ -105,8 +113,9 @@ class DailyRiddleViewModel(
                 resetDailyRiddleUseCase(_selectedDate.value)
                 _error.value = null
             } catch (e: Exception) {
-                _error.value =
-                    UiText.StringResource(R.string.riddle_error_reset, e.message ?: "Unknown")
+                if (e is CancellationException) throw e
+                AppLogger.e(TAG, "onResetRiddle failed", e)
+                _error.value = UiText.StringResource(R.string.riddle_error_reset)
             } finally {
                 _isLoading.value = false
             }

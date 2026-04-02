@@ -1,7 +1,6 @@
 package com.krumin.tonguecoinsmanager.data.repository
 
 import android.content.Context
-import android.util.Log
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.auth.oauth2.ServiceAccountCredentials
 import com.google.cloud.firestore.Firestore
@@ -23,6 +22,7 @@ import com.krumin.tonguecoinsmanager.domain.model.FcmPriority
 import com.krumin.tonguecoinsmanager.domain.model.NotificationTarget
 import com.krumin.tonguecoinsmanager.domain.model.TestDevice
 import com.krumin.tonguecoinsmanager.domain.repository.FcmRepository
+import com.krumin.tonguecoinsmanager.util.AppLogger
 import com.krumin.tonguecoinsmanager.util.FirestoreResilience.awaitWithRetry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -44,6 +44,10 @@ class FcmRepositoryImpl(
     private val testDeviceDao: TestDeviceDao,
     private val okHttpClient: OkHttpClient
 ) : FcmRepository {
+
+    companion object {
+        private const val TAG = "FcmRepository"
+    }
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -79,7 +83,7 @@ class FcmRepositoryImpl(
             )
 
             val jsonBody = json.encodeToString(requestBody)
-            Log.d("FcmRepository", "Sending FCM: ${if (dryRun) "[DRY RUN] " else ""}$jsonBody")
+            AppLogger.d(TAG, "Sending FCM: ${if (dryRun) "[DRY RUN] " else ""}$jsonBody")
 
             val request = Request.Builder()
                 .url(fcmUrl)
@@ -91,7 +95,7 @@ class FcmRepositoryImpl(
             okHttpClient.newCall(request).execute().use { response ->
                 val responseBody = response.body.string()
                 if (response.isSuccessful) {
-                    Log.d("FcmRepository", "FCM send successful: $responseBody")
+                    AppLogger.d(TAG, "FCM send successful: $responseBody")
                     Result.success(Unit)
                 } else {
                     Result.failure(IOException("FCM failed ${response.code}: $responseBody"))

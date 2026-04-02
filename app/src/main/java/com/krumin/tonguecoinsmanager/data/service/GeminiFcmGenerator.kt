@@ -1,6 +1,5 @@
 package com.krumin.tonguecoinsmanager.data.service
 
-import android.util.Log
 import com.google.firebase.Firebase
 import com.google.firebase.ai.GenerativeModel
 import com.google.firebase.ai.ai
@@ -10,6 +9,7 @@ import com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig
 import com.krumin.tonguecoinsmanager.data.infrastructure.PromptTemplates
 import com.krumin.tonguecoinsmanager.domain.service.FcmGenerator
 import com.krumin.tonguecoinsmanager.domain.service.GeneratedFcmContent
+import com.krumin.tonguecoinsmanager.util.AppLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -42,7 +42,7 @@ class GeminiFcmGenerator(
             try {
                 val response = model.generateContent(prompt)
                 val jsonStr = response.text?.let { cleanJson(it) } ?: run {
-                    Log.e(TAG, "Response text is null")
+                    AppLogger.e(TAG, "Response text is null")
                     return@withContext null
                 }
 
@@ -52,7 +52,7 @@ class GeminiFcmGenerator(
                     body = jsonElement["body"]?.jsonPrimitive?.content ?: ""
                 )
             } catch (e: Exception) {
-                Log.e(TAG, "Error generating content: ${e.message}", e)
+                AppLogger.e(TAG, "Error generating content: ${e.message}", e)
                 null
             }
         }

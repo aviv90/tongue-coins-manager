@@ -57,5 +57,11 @@ object AppConfig {
         const val ALPHA_LOW = 0.3f
         const val FLIP_ROTATION = 180f
     }
+
+    object Persistence {
+        const val ROOM_DATABASE_NAME = "tongue_coins_db"
+        const val FCM_DRAFT_PREFS = "fcm_draft_prefs"
+    }
 }
+
 

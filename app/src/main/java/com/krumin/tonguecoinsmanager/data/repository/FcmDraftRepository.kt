@@ -1,12 +1,16 @@
 package com.krumin.tonguecoinsmanager.data.repository
 
 import android.content.Context
-import android.util.Log
+import com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig
 import com.krumin.tonguecoinsmanager.domain.model.Platform
+import com.krumin.tonguecoinsmanager.util.AppLogger
 import org.json.JSONObject
 
 class FcmDraftRepository(private val context: Context) {
-    private val prefs = context.getSharedPreferences("fcm_draft_prefs", Context.MODE_PRIVATE)
+    private val prefs = context.getSharedPreferences(
+        AppConfig.Persistence.FCM_DRAFT_PREFS,
+        Context.MODE_PRIVATE
+    )
 
     companion object {
         private const val KEY_TITLE = "draft_title"
@@ -37,7 +41,7 @@ class FcmDraftRepository(private val context: Context) {
             .putString(KEY_PLATFORMS, platformsString)
             .apply()
 
-        Log.d(TAG, "Draft saved: ${draft.title}")
+        AppLogger.d(TAG, "Draft saved: ${draft.title}")
     }
 
     fun loadDraft(): FcmDraft? {
@@ -53,7 +57,7 @@ class FcmDraftRepository(private val context: Context) {
             val json = JSONObject(payloadJson)
             json.keys().forEach { payload[it] = json.getString(it) }
         } catch (e: Exception) {
-            Log.e(TAG, "Error loading payload JSON", e)
+            AppLogger.e(TAG, "Error loading payload JSON", e)
         }
 
         val platforms = if (platformsString.isEmpty()) {
@@ -73,6 +77,6 @@ class FcmDraftRepository(private val context: Context) {
 
     fun clearDraft() {
         prefs.edit().clear().apply()
-        Log.d(TAG, "Draft cleared")
+        AppLogger.d(TAG, "Draft cleared")
     }
 }

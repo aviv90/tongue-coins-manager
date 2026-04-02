@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="error_network_friendly">נראה שיש בעיית תקשורת. נסה שוב בעוד רגע.</string>
+    <string name="error_generic_friendly">משהו השתבש. נסה שוב.</string>
+
     <string name="app_name">Tongue Coins Manager</string>
     <string name="app_title_main">TCM</string>
     <string name="search_placeholder">חיפוש…</string>
@@ -124,13 +127,13 @@
     <string name="broadcast_env_production">פרודקשן (Production)</string>
     <string name="broadcast_env_test">טסט (Test)</string>
     <string name="broadcast_target_env_header">סביבת יעד (Environment)</string>
-    <string name="error_broadcast_load">טעינת ההודעה נכשלה: %1$s</string>
-    <string name="error_broadcast_save">שמירת ההודעה נכשלה: %1$s</string>
+    <string name="error_broadcast_load">טעינת ההודעה נכשלה. נסה שוב או בדוק את החיבור.</string>
+    <string name="error_broadcast_save">שמירת ההודעה נכשלה. נסה שוב או בדוק את החיבור.</string>
     <string name="error_broadcast_invalid">ביטול: נתונים לא תקינים. ודא שמזהה לא ריק, יש תוכן, ו-CTA תקין.</string>
     <string name="riddle_id_label">מזהה: %1$s</string>
-    <string name="riddle_error_load">טעינת החידות נכשלה: %1$s</string>
-    <string name="riddle_error_set">הגדרת החידה נכשלה: %1$s</string>
-    <string name="riddle_error_reset">איפוס החידה נכשל: %1$s</string>
+    <string name="riddle_error_load">טעינת החידות נכשלה. נסה שוב או בדוק את החיבור.</string>
+    <string name="riddle_error_set">הגדרת החידה נכשלה. נסה שוב או בדוק את החיבור.</string>
+    <string name="riddle_error_reset">איפוס החידה נכשל. נסה שוב או בדוק את החיבור.</string>
     <string name="content_desc_daily_riddle">ניהול חידה יומית</string>
     <string name="content_desc_daily_broadcast">ניהול הודעה יומית</string>
     <string name="content_desc_select_date">בחר תאריך</string>
@@ -173,6 +176,7 @@
     <string name="fcm_success_scheduled">ההודעה תוזמנה בהצלחה!</string>
     <string name="fcm_success_dry_run">הבדיקה עברה בהצלחה (Dry Run)</string>
     <string name="fcm_error_generation_failed">ג׳ינרוט התוכן נכשל. נסה שוב.</string>
+    <string name="fcm_error_schedule_invalid">תאריך או שעה לא תקינים. בדוק את הפורמט ונסה שוב.</string>
     <string name="fcm_idea_prompt_label">רעיון להודעה (עבור Gemini)</string>
     <string name="fcm_idea_prompt_placeholder">למשל: תזכורת לבוא לשחק ולקבל בונוס</string>
     <string name="fcm_generate_button_content_description">ג׳נרט תוכן באמצעות AI</string>

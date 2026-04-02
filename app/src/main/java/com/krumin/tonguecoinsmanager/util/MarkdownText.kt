@@ -1,10 +1,12 @@
 package com.krumin.tonguecoinsmanager.util
 
 import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -18,10 +20,11 @@ import java.util.regex.Pattern
 fun MarkdownText(
     text: String,
     style: TextStyle = LocalTextStyle.current,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    linkColor: Color = MaterialTheme.colorScheme.primary
 ) {
-    val annotatedString = remember(text) {
-        parseMarkdown(text)
+    val annotatedString = remember(text, linkColor) {
+        parseMarkdown(text, linkColor)
     }
     Text(
         text = annotatedString,
@@ -30,25 +33,9 @@ fun MarkdownText(
     )
 }
 
-fun parseMarkdown(text: String): AnnotatedString {
+fun parseMarkdown(text: String, linkColor: Color): AnnotatedString {
     return buildAnnotatedString {
-        // Matchers:
-        // 1. **Bold**
-        // 2. *Italics*
-        // 3. [Link](url)
-
-        var currentText = text
-
-        // Match bold: **text**
-        val boldPattern = Pattern.compile("\\*\\*(.*?)\\*\\*")
-        val boldMatcher = boldPattern.matcher(currentText)
-        val boldMatches = mutableListOf<Pair<Int, Int>>()
-
-        // This is simplified. Doing nested parsing correctly requires a recursive scanner.
-        // For local broadcast texts, a clean single-level Bold/Italic parser covers 95%+ requirements.
-
         var cursor = 0
-        val sb = StringBuilder()
         val matcher =
             Pattern.compile("(\\*\\*.*?\\*\\*)|(\\*.*?\\*)|(\\[.*?\\]\\(.*?\\))").matcher(text)
 
@@ -56,7 +43,6 @@ fun parseMarkdown(text: String): AnnotatedString {
             val start = matcher.start()
             val end = matcher.end()
 
-            // Append normal text before match
             if (start > cursor) {
                 append(text.substring(cursor, start))
             }
@@ -93,12 +79,11 @@ fun parseMarkdown(text: String): AnnotatedString {
                     pushStyle(
                         SpanStyle(
                             textDecoration = TextDecoration.Underline,
-                            color = androidx.compose.ui.graphics.Color.Blue
+                            color = linkColor
                         )
                     )
                     append(label)
                     pop()
-                    // Clickable setup can be added with addStringAnnotation, but in Preview, text output is mostly design-reassurance
                     addStringAnnotation("URL", url, this.length - label.length, this.length)
                 }
             }

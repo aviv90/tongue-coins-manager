@@ -7,6 +7,7 @@ import com.krumin.tonguecoinsmanager.domain.model.PendingChange
 import com.krumin.tonguecoinsmanager.domain.model.PhotoMetadata
 import com.krumin.tonguecoinsmanager.domain.repository.PhotoRepository
 import com.krumin.tonguecoinsmanager.util.UiText
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -122,7 +123,7 @@ class MainViewModel(
             val photos = repository.getPhotos()
             _allPhotos.value = photos
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
+            if (e is CancellationException) throw e
             _state.update {
                 it.copy(
                     error = UiText.StringResource(R.string.error_loading_photos)
@@ -140,7 +141,7 @@ class MainViewModel(
                 refreshPhotos()
                 _state.update { it.copy(isCommitting = false, commitSuccess = true) }
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
+                if (e is CancellationException) throw e
                 _state.update {
                     it.copy(
                         isCommitting = false,
@@ -203,7 +204,7 @@ class MainViewModel(
                     )
                 }
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
+                if (e is CancellationException) throw e
                 _state.update {
                     it.copy(
                         isDownloading = false,
