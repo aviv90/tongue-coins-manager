@@ -1,5 +1,6 @@
 package com.krumin.tonguecoinsmanager.data.model
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -14,9 +15,15 @@ data class FcmMessage(
     val data: Map<String, String>? = null,
     val android: AndroidConfig? = null,
     val apns: ApnsConfig? = null,
+    val fcm_options: FcmOptions? = null,
     val token: String? = null,
     val topic: String? = null,
     val condition: String? = null
+)
+
+@Serializable
+data class FcmOptions(
+    val analytics_label: String? = null
 )
 
 @Serializable
@@ -29,6 +36,7 @@ data class FcmNotification(
 @Serializable
 data class AndroidConfig(
     val priority: String = "high",
+    val ttl: String = "604800s",
     val notification: AndroidNotification? = null
 )
 
@@ -42,7 +50,13 @@ data class AndroidNotification(
 
 @Serializable
 data class ApnsConfig(
+    val headers: ApnsHeaders? = null,
     val payload: ApnsPayload? = null
+)
+
+@Serializable
+data class ApnsHeaders(
+    @SerialName("apns-priority") val apns_priority: String? = null
 )
 
 @Serializable
@@ -53,7 +67,8 @@ data class ApnsPayload(
 @Serializable
 data class Aps(
     val sound: String? = "default",
-    val badge: Int? = null
+    val badge: Int? = null,
+    @SerialName("mutable-content") val mutable_content: Int? = null
 )
 
 @Serializable

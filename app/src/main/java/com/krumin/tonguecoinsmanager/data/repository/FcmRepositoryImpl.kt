@@ -1,7 +1,9 @@
 package com.krumin.tonguecoinsmanager.data.repository
 
 import android.content.Context
+import android.util.Log
 import com.google.auth.oauth2.GoogleCredentials
+import com.google.auth.oauth2.ServiceAccountCredentials
 import com.google.cloud.firestore.Firestore
 import com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig
 import com.krumin.tonguecoinsmanager.data.local.TestDeviceDao
@@ -9,9 +11,11 @@ import com.krumin.tonguecoinsmanager.data.local.TestDeviceEntity
 import com.krumin.tonguecoinsmanager.data.model.AndroidConfig
 import com.krumin.tonguecoinsmanager.data.model.AndroidNotification
 import com.krumin.tonguecoinsmanager.data.model.ApnsConfig
+import com.krumin.tonguecoinsmanager.data.model.ApnsHeaders
 import com.krumin.tonguecoinsmanager.data.model.ApnsPayload
 import com.krumin.tonguecoinsmanager.data.model.Aps
 import com.krumin.tonguecoinsmanager.data.model.FcmMessage
+import com.krumin.tonguecoinsmanager.data.model.FcmOptions
 import com.krumin.tonguecoinsmanager.data.model.FcmRequest
 import com.krumin.tonguecoinsmanager.data.model.ScheduledFcmEntity
 import com.krumin.tonguecoinsmanager.domain.model.FcmNotification
@@ -23,6 +27,8 @@ import com.krumin.tonguecoinsmanager.util.FirestoreResilience.awaitWithRetry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -39,15 +45,25 @@ class FcmRepositoryImpl(
     private val okHttpClient: OkHttpClient
 ) : FcmRepository {
 
-    private val json = Json { ignoreUnknownKeys = true }
+    private val json = Json {
+        ignoreUnknownKeys = true
+        explicitNulls = false
+    }
 
-    private suspend fun getProjectId(): String = withContext(Dispatchers.IO) {
-        retryOnTransient {
-            val stream = context.assets.open(AppConfig.Gcs.DEFAULT_KEY_FILE)
-            val creds = com.google.auth.oauth2.ServiceAccountCredentials.fromStream(stream)
-            creds.projectId
+    private val tokenMutex = Mutex()
+
+    // Loaded once from assets; ServiceAccountCredentials gives us both projectId and auth.
+    private val serviceAccount: ServiceAccountCredentials by lazy {
+        context.assets.open(AppConfig.Gcs.DEFAULT_KEY_FILE).use { stream ->
+            ServiceAccountCredentials.fromStream(stream)
         }
     }
+
+    private val scopedCredentials: GoogleCredentials by lazy {
+        serviceAccount.createScoped(listOf(AppConfig.Fcm.SCOPE))
+    }
+
+    private val projectId: String by lazy { serviceAccount.projectId }
 
     override suspend fun sendNotification(
         notification: FcmNotification,
@@ -55,7 +71,6 @@ class FcmRepositoryImpl(
     ): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             val accessToken = getAccessToken()
-            val projectId = getProjectId()
             val fcmUrl = "${AppConfig.Fcm.BASE_URL}/$projectId/messages:send"
 
             val requestBody = FcmRequest(
@@ -64,6 +79,8 @@ class FcmRepositoryImpl(
             )
 
             val jsonBody = json.encodeToString(requestBody)
+            Log.d("FcmRepository", "Sending FCM: ${if (dryRun) "[DRY RUN] " else ""}$jsonBody")
+
             val request = Request.Builder()
                 .url(fcmUrl)
                 .addHeader("Authorization", "Bearer $accessToken")
@@ -72,11 +89,12 @@ class FcmRepositoryImpl(
                 .build()
 
             okHttpClient.newCall(request).execute().use { response ->
+                val responseBody = response.body.string()
                 if (response.isSuccessful) {
+                    Log.d("FcmRepository", "FCM send successful: $responseBody")
                     Result.success(Unit)
                 } else {
-                    val errorBody = response.body.string()
-                    Result.failure(IOException("FCM failed with status ${response.code}: $errorBody"))
+                    Result.failure(IOException("FCM failed ${response.code}: $responseBody"))
                 }
             }
         } catch (e: Exception) {
@@ -85,12 +103,11 @@ class FcmRepositoryImpl(
     }
 
     private suspend fun getAccessToken(): String = withContext(Dispatchers.IO) {
-        retryOnTransient {
-            val stream = context.assets.open(AppConfig.Gcs.DEFAULT_KEY_FILE)
-            val credentials = GoogleCredentials.fromStream(stream)
-                .createScoped(listOf(AppConfig.Fcm.SCOPE))
-            credentials.refreshIfExpired()
-            credentials.accessToken.tokenValue
+        tokenMutex.withLock {
+            retryOnTransient {
+                scopedCredentials.refreshIfExpired()
+                scopedCredentials.accessToken.tokenValue
+            }
         }
     }
 
@@ -148,7 +165,8 @@ class FcmRepositoryImpl(
                     androidChannelId = notification.androidChannelId,
                     soundEnabled = notification.soundEnabled,
                     badgeCount = notification.badgeCount,
-                    scheduledTime = notification.scheduledTime ?: 0L
+                    scheduledTime = notification.scheduledTime ?: 0L,
+                    analyticsLabel = notification.analyticsLabel
                 )
 
                 awaitWithRetry {
@@ -162,11 +180,10 @@ class FcmRepositoryImpl(
             }
         }
 
-    override fun getTestDevices(): Flow<List<TestDevice>> {
-        return testDeviceDao.getAllFlow().map { entities ->
+    override fun getTestDevices(): Flow<List<TestDevice>> =
+        testDeviceDao.getAllFlow().map { entities ->
             entities.map { TestDevice(it.token, it.name) }
         }
-    }
 
     override suspend fun addTestDevice(device: TestDevice) {
         testDeviceDao.insert(TestDeviceEntity(device.token, device.name))
@@ -176,44 +193,29 @@ class FcmRepositoryImpl(
         testDeviceDao.delete(TestDeviceEntity(device.token, device.name))
     }
 
-    private fun FcmNotification.toApiMessage(): FcmMessage {
-        val fcmNotification = FcmApiNotification(
-            title = title,
-            body = body,
-            image = imageUrl
-        )
-
-        return FcmMessage(
-            notification = fcmNotification,
-            data = data,
-            android = AndroidConfig(
-                priority = if (priority == FcmPriority.HIGH) "high" else "normal",
-                notification = AndroidNotification(
-                    click_action = null, // Let the OS decide (opens launcher activity)
-                    channel_id = androidChannelId,
-                    sound = if (soundEnabled) "default" else null
+    private fun FcmNotification.toApiMessage(): FcmMessage = FcmMessage(
+        notification = FcmApiNotification(title = title, body = body, image = imageUrl),
+        data = data.takeIf { it.isNotEmpty() },
+        android = AndroidConfig(
+            priority = if (priority == FcmPriority.HIGH) "high" else "normal",
+            notification = AndroidNotification(
+                channel_id = androidChannelId,
+                sound = if (soundEnabled) "default" else null
+            )
+        ),
+        apns = ApnsConfig(
+            headers = ApnsHeaders(apns_priority = if (priority == FcmPriority.HIGH) "10" else "5"),
+            payload = ApnsPayload(
+                aps = Aps(
+                    sound = if (soundEnabled) "default" else null,
+                    badge = badgeCount,
+                    mutable_content = if (imageUrl != null) 1 else null
                 )
-            ),
-            apns = ApnsConfig(
-                payload = ApnsPayload(
-                    aps = Aps(
-                        sound = if (soundEnabled) "default" else null,
-                        badge = badgeCount
-                    )
-                )
-            ),
-            token = when (target) {
-                is NotificationTarget.Token -> target.token
-                else -> null
-            },
-            topic = when (target) {
-                is NotificationTarget.Topic -> target.name
-                else -> null
-            },
-            condition = when (target) {
-                is NotificationTarget.Condition -> target.condition
-                else -> null
-            }
-        )
-    }
+            )
+        ),
+        fcm_options = analyticsLabel?.let { FcmOptions(it) },
+        token = (target as? NotificationTarget.Token)?.token,
+        topic = (target as? NotificationTarget.Topic)?.name,
+        condition = (target as? NotificationTarget.Condition)?.condition
+    )
 }

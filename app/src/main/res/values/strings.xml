@@ -147,12 +147,11 @@
     <string name="fcm_field_title_label">כותרת ההודעה</string>
     <string name="fcm_field_body_label">גוף ההודעה</string>
     <string name="fcm_field_image_url_label">URL של תמונה (אופציונלי)</string>
-    <string name="fcm_header_target">יעד השליחה</string>
-    <string name="fcm_target_topic">Topic</string>
-    <string name="fcm_target_condition">Condition</string>
-    <string name="fcm_target_token">Token</string>
-    <string name="fcm_field_topic_label">שם הנושא (למשל: all, ios, android)</string>
-    <string name="fcm_field_condition_label">ביטוי תנאי (למשל: \'news\' in topics)</string>
+    <string name="fcm_pick_riddle_content_description">בחר מתוך חידות קיימות</string>
+    <string name="fcm_picker_title">בחירת חידה</string>
+    <string name="fcm_header_target">פלטפורמות יעד</string>
+    <string name="fcm_target_all_platforms">כל הפלטפורמות (Android &amp; iOS)</string>
+    <string name="fcm_confirm_send_message_formatted">האם אתה בטוח שברצונך לשלוח את ההודעה לכל המשתמשים ב-%1$s? פעולה זו אינה ניתנת לביטול.</string>
     <string name="fcm_field_token_label">Device Registration Token</string>
     <string name="fcm_header_data">שדות מידע (Data Payload)</string>
     <string name="fcm_data_key_placeholder">מפתח (Key)</string>
@@ -170,6 +169,7 @@
     <string name="fcm_error_title_required">חובה להזין כותרת</string>
     <string name="fcm_error_body_required">חובה להזין גוף הודעה</string>
     <string name="fcm_success_sent">ההודעה נשלחה בהצלחה!</string>
+    <string name="fcm_copy_url_success">URL הועתק לקליפבורד</string>
     <string name="fcm_success_scheduled">ההודעה תוזמנה בהצלחה!</string>
     <string name="fcm_success_dry_run">הבדיקה עברה בהצלחה (Dry Run)</string>
     <string name="fcm_error_generation_failed">ג׳ינרוט התוכן נכשל. נסה שוב.</string>

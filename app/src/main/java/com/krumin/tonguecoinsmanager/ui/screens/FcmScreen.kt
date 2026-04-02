@@ -21,6 +21,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -36,12 +38,15 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
@@ -56,6 +61,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -78,11 +84,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import com.krumin.tonguecoinsmanager.R
 import com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig
 import com.krumin.tonguecoinsmanager.domain.model.FcmPriority
 import com.krumin.tonguecoinsmanager.domain.model.NotificationTarget
+import com.krumin.tonguecoinsmanager.domain.model.PhotoMetadata
 import com.krumin.tonguecoinsmanager.domain.model.Platform
 import com.krumin.tonguecoinsmanager.domain.model.TestDevice
 import com.krumin.tonguecoinsmanager.ui.viewmodel.FcmAction
@@ -106,7 +114,8 @@ fun FcmScreen(
     var showAddDeviceDialog by remember { mutableStateOf(false) }
     var showSelectDeviceDialog by remember { mutableStateOf(false) }
     var showConfirmClearDialog by remember { mutableStateOf(false) }
-    var pendingTargetToConfirm by remember { mutableStateOf<NotificationTarget?>(null) }
+    var isConfirmingProductionSend by remember { mutableStateOf(false) }
+    var pendingTestTarget by remember { mutableStateOf<NotificationTarget.Token?>(null) }
     var advancedExpanded by remember { mutableStateOf(false) }
 
     // Date/Time Pickers
@@ -192,7 +201,7 @@ fun FcmScreen(
                             val layoutDirection = LocalLayoutDirection.current
                             IconButton(onClick = {
                                 if (state.title.isNotBlank() && state.body.isNotBlank()) {
-                                    pendingTargetToConfirm = state.target
+                                    isConfirmingProductionSend = true
                                 }
                             }) {
                                 Icon(
@@ -281,9 +290,24 @@ fun FcmScreen(
                         value = state.imageUrl ?: "",
                         onValueChange = { viewModel.handleAction(FcmAction.UpdateImageUrl(it)) },
                         label = { Text(stringResource(R.string.fcm_field_image_url_label)) },
+                        placeholder = { Text(stringResource(R.string.fcm_field_image_url_placeholder)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
-                        placeholder = { Text(stringResource(R.string.fcm_field_image_url_placeholder)) }
+                        trailingIcon = {
+                            IconButton(onClick = {
+                                viewModel.handleAction(
+                                    FcmAction.ToggleRiddlePicker(
+                                        true
+                                    )
+                                )
+                            }) {
+                                Icon(
+                                    Icons.Default.Image,
+                                    contentDescription = stringResource(R.string.fcm_pick_riddle_content_description),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
                     )
 
                     if (!state.imageUrl.isNullOrBlank()) {
@@ -299,11 +323,11 @@ fun FcmScreen(
                         )
                     }
 
-                    // Target
+                    // Target Platforms
                     FcmHeader(stringResource(R.string.fcm_header_target))
-                    TargetSelector(
-                        selectedTarget = state.target,
-                        onTargetSelected = { viewModel.handleAction(FcmAction.UpdateTarget(it)) }
+                    PlatformSelector(
+                        selectedPlatforms = state.selectedPlatforms,
+                        onTogglePlatform = { viewModel.handleAction(FcmAction.TogglePlatform(it)) }
                     )
 
                     // Data Payload
@@ -436,34 +460,59 @@ fun FcmScreen(
             }
         }
 
-        // Unified Send Confirmation Dialog
-        if (pendingTargetToConfirm != null) {
-            val isTestSend = pendingTargetToConfirm is NotificationTarget.Token
+        // Production Send Confirmation
+        if (isConfirmingProductionSend) {
             AlertDialog(
-                onDismissRequest = { pendingTargetToConfirm = null },
+                onDismissRequest = { isConfirmingProductionSend = false },
                 title = {
                     Text(
                         if (state.isScheduled) stringResource(R.string.fcm_send_scheduled_button)
-                        else if (isTestSend) stringResource(R.string.fcm_confirm_send_token_title)
                         else stringResource(R.string.fcm_confirm_send_title)
                     )
                 },
                 text = {
+                    val platformText = when {
+                        state.selectedPlatforms.size == 2 -> stringResource(R.string.fcm_target_all_platforms)
+                        state.selectedPlatforms.contains(Platform.ANDROID) -> stringResource(R.string.platform_android)
+                        state.selectedPlatforms.contains(Platform.IOS) -> stringResource(R.string.platform_ios)
+                        else -> stringResource(R.string.fcm_target_all_platforms)
+                    }
                     Text(
-                        if (isTestSend) stringResource(R.string.fcm_confirm_send_message)
-                        else stringResource(R.string.fcm_confirm_send_message)
+                        stringResource(R.string.fcm_confirm_send_message_formatted, platformText)
                     )
                 },
                 confirmButton = {
                     TextButton(onClick = {
-                        viewModel.handleAction(FcmAction.SendNotification(pendingTargetToConfirm!!))
-                        pendingTargetToConfirm = null
+                        viewModel.handleAction(FcmAction.SendNotification(null))
+                        isConfirmingProductionSend = false
                     }) {
                         Text(stringResource(R.string.broadcast_dialog_button_confirm))
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { pendingTargetToConfirm = null }) {
+                    TextButton(onClick = { isConfirmingProductionSend = false }) {
+                        Text(stringResource(R.string.broadcast_dialog_button_cancel))
+                    }
+                }
+            )
+        }
+
+        // Test Send Confirmation
+        if (pendingTestTarget != null) {
+            AlertDialog(
+                onDismissRequest = { pendingTestTarget = null },
+                title = { Text(stringResource(R.string.fcm_confirm_send_token_title)) },
+                text = { Text(stringResource(R.string.fcm_confirm_send_message)) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        viewModel.handleAction(FcmAction.SendNotification(pendingTestTarget))
+                        pendingTestTarget = null
+                    }) {
+                        Text(stringResource(R.string.broadcast_dialog_button_confirm))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { pendingTestTarget = null }) {
                         Text(stringResource(R.string.broadcast_dialog_button_cancel))
                     }
                 }
@@ -517,10 +566,18 @@ fun FcmScreen(
             SelectDeviceDialog(
                 devices = state.testDevices,
                 onSelect = { device ->
-                    pendingTargetToConfirm = NotificationTarget.Token(device.token)
+                    pendingTestTarget = NotificationTarget.Token(device.token)
                     showSelectDeviceDialog = false
                 },
                 onDismiss = { showSelectDeviceDialog = false }
+            )
+        }
+
+        if (state.isRiddlePickerVisible) {
+            RiddlePickerDialog(
+                riddles = state.availableRiddles,
+                onSelect = { viewModel.handleAction(FcmAction.SelectRiddle(it)) },
+                onDismiss = { viewModel.handleAction(FcmAction.ToggleRiddlePicker(false)) }
             )
         }
     }
@@ -537,125 +594,150 @@ fun FcmHeader(text: String) {
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TargetSelector(
-    selectedTarget: NotificationTarget,
-    onTargetSelected: (NotificationTarget) -> Unit
+fun RiddlePickerDialog(
+    riddles: List<PhotoMetadata>,
+    onSelect: (PhotoMetadata) -> Unit,
+    onDismiss: () -> Unit
 ) {
-    var selectedType by remember {
-        mutableStateOf(
-            when (selectedTarget) {
-                is NotificationTarget.Topic -> 0
-                is NotificationTarget.Condition -> 1
-                is NotificationTarget.Token -> 2
-            }
-        )
-    }
-    Column(verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_medium))) {
-        Row(modifier = Modifier.fillMaxWidth()) {
-            val options = listOf(
-                stringResource(R.string.fcm_target_topic),
-                stringResource(R.string.fcm_target_condition),
-                stringResource(R.string.fcm_target_token)
-            )
-            options.forEachIndexed { index, label ->
-                FilterChip(
-                    selected = selectedType == index,
-                    onClick = {
-                        selectedType = index
-                        when (index) {
-                            0 -> onTargetSelected(NotificationTarget.Topic("all"))
-                            1 -> onTargetSelected(NotificationTarget.Condition("'all' in topics"))
-                            2 -> onTargetSelected(NotificationTarget.Token(""))
-                        }
-                    },
-                    label = {
-                        Text(
-                            text = label,
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center
-                        )
-                    },
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = dimensionResource(R.dimen.spacing_tiny))
-                )
-            }
+    var searchQuery by remember { mutableStateOf("") }
+    val filteredRiddles = remember(searchQuery, riddles) {
+        if (searchQuery.isEmpty()) riddles
+        else riddles.filter {
+            it.title.contains(searchQuery, ignoreCase = true) ||
+                    it.id.contains(searchQuery, ignoreCase = true)
         }
+    }
 
-        when (selectedType) {
-            0 -> {
-                Column(verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_medium))) {
-                    Text(
-                        text = stringResource(R.string.supported_platforms_label),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.outline
-                    )
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_large))
-                    ) {
-                        Platform.entries.forEach { platform ->
-                            val isSelected =
-                                (selectedTarget as? NotificationTarget.Topic)?.name == platform.name.lowercase() ||
-                                        (selectedTarget as? NotificationTarget.Topic)?.name == "all"
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxSize(0.9f),
+            shape = MaterialTheme.shapes.extraLarge,
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = dimensionResource(R.dimen.surface_elevation)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(dimensionResource(R.dimen.spacing_large))
+            ) {
+                Text(
+                    text = stringResource(R.string.fcm_picker_title),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
 
-                            FilterChip(
-                                selected = if ((selectedTarget as? NotificationTarget.Topic)?.name == "all") true else isSelected,
-                                onClick = {
-                                    val currentName =
-                                        (selectedTarget as? NotificationTarget.Topic)?.name ?: "all"
-                                    val newName = when {
-                                        currentName == "all" -> platform.name.lowercase()
-                                        currentName == platform.name.lowercase() -> "all"
-                                        else -> "all"
-                                    }
-                                    onTargetSelected(NotificationTarget.Topic(newName))
-                                },
-                                label = {
-                                    Text(
-                                        text = if (platform == Platform.ANDROID) stringResource(
-                                            R.string.platform_android
-                                        ) else stringResource(R.string.platform_ios),
-                                        modifier = Modifier.fillMaxWidth(),
-                                        textAlign = TextAlign.Center
-                                    )
-                                },
-                                modifier = Modifier.weight(1f),
-                                leadingIcon = if (isSelected || (selectedTarget as? NotificationTarget.Topic)?.name == "all") {
-                                    {
-                                        Icon(
-                                            Icons.Default.Check,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(dimensionResource(R.dimen.icon_size_tiny))
-                                        )
-                                    }
-                                } else null
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_medium)))
+
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text(stringResource(R.string.riddle_search_placeholder)) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    singleLine = true,
+                    shape = MaterialTheme.shapes.medium
+                )
+
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_medium)))
+
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_small))
+                ) {
+                    items(filteredRiddles, key = { it.id }) { riddle ->
+                        Card(
+                            onClick = { onSelect(riddle) },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                             )
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .padding(dimensionResource(R.dimen.spacing_medium))
+                                    .fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                AsyncImage(
+                                    model = riddle.imageUrl,
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .size(dimensionResource(R.dimen.riddle_item_image_size))
+                                        .clip(MaterialTheme.shapes.medium)
+                                        .background(MaterialTheme.colorScheme.surface),
+                                    contentScale = ContentScale.Crop
+                                )
+                                Spacer(modifier = Modifier.width(dimensionResource(R.dimen.spacing_medium)))
+                                Column {
+                                    Text(
+                                        text = riddle.title,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontWeight = FontWeight.SemiBold,
+                                        maxLines = 1,
+                                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                    )
+                                    Text(
+                                        text = riddle.id,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.outline
+                                    )
+                                }
+                            }
                         }
                     }
+                }
 
-                    OutlinedTextField(
-                        value = (selectedTarget as? NotificationTarget.Topic)?.name ?: "",
-                        onValueChange = { onTargetSelected(NotificationTarget.Topic(it)) },
-                        label = { Text(stringResource(R.string.fcm_field_topic_label)) },
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_medium)))
+
+                TextButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.align(Alignment.End)
+                ) {
+                    Text(stringResource(R.string.broadcast_dialog_button_cancel))
                 }
             }
+        }
+    }
+}
 
-            1 -> OutlinedTextField(
-                value = (selectedTarget as? NotificationTarget.Condition)?.condition ?: "",
-                onValueChange = { onTargetSelected(NotificationTarget.Condition(it)) },
-                label = { Text(stringResource(R.string.fcm_field_condition_label)) },
-                modifier = Modifier.fillMaxWidth()
-            )
+@Composable
+fun PlatformSelector(
+    selectedPlatforms: Set<Platform>,
+    onTogglePlatform: (Platform) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_large))
+    ) {
+        Platform.entries.forEach { platform ->
+            val isSelected = selectedPlatforms.contains(platform)
 
-            2 -> OutlinedTextField(
-                value = (selectedTarget as? NotificationTarget.Token)?.token ?: "",
-                onValueChange = { onTargetSelected(NotificationTarget.Token(it)) },
-                label = { Text(stringResource(R.string.fcm_field_token_label)) },
-                modifier = Modifier.fillMaxWidth()
+            FilterChip(
+                selected = isSelected,
+                onClick = { onTogglePlatform(platform) },
+                label = {
+                    Text(
+                        text = if (platform == Platform.ANDROID) stringResource(R.string.platform_android)
+                        else stringResource(R.string.platform_ios),
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
+                },
+                modifier = Modifier.weight(1f),
+                leadingIcon = if (isSelected) {
+                    {
+                        Icon(
+                            Icons.Default.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(dimensionResource(R.dimen.icon_size_tiny))
+                        )
+                    }
+                } else null
             )
         }
     }

@@ -7,10 +7,11 @@ data class FcmNotification(
     val data: Map<String, String> = emptyMap(),
     val target: NotificationTarget,
     val priority: FcmPriority = FcmPriority.HIGH,
-    val androidChannelId: String? = "general",
+    val androidChannelId: String? = "fcm_default_channel",
     val soundEnabled: Boolean = true,
     val badgeCount: Int? = null,
-    val scheduledTime: Long? = null
+    val scheduledTime: Long? = null,
+    val analyticsLabel: String? = null
 )
 
 enum class FcmPriority {

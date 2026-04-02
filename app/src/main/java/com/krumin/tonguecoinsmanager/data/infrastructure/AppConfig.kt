@@ -46,7 +46,7 @@ object AppConfig {
         const val BASE_URL = "https://fcm.googleapis.com/v1/projects"
         const val CONTENT_TYPE_JSON = "application/json"
 
-        const val DEFAULT_CHANNEL_ID = "general"
+        const val DEFAULT_CHANNEL_ID = "fcm_default_channel"
         const val DATE_FORMAT = "yyyy-MM-dd"
         const val TIME_FORMAT = "HH:mm"
         const val DATETIME_FORMAT = "yyyy-MM-dd HH:mm"

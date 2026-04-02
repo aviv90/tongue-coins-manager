@@ -1,13 +1,15 @@
 package com.krumin.tonguecoinsmanager.ui.screens
 
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -75,10 +77,12 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.lifecycle.Lifecycle
@@ -554,6 +558,7 @@ fun BatchActionBar(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PhotoCard(
     photo: PhotoMetadata,
@@ -562,10 +567,23 @@ fun PhotoCard(
     isDownloading: Boolean,
     pendingChange: PendingChange?
 ) {
+    val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
+
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = {
+                    clipboardManager.setText(AnnotatedString(photo.imageUrl))
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.fcm_copy_url_success),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            )
     ) {
         Column {
             Box {

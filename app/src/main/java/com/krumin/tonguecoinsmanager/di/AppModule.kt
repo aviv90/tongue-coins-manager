@@ -10,6 +10,7 @@ import com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig
 import com.krumin.tonguecoinsmanager.data.local.AppDatabase
 import com.krumin.tonguecoinsmanager.data.repository.BroadcastRepositoryImpl
 import com.krumin.tonguecoinsmanager.data.repository.DailyRiddleRepositoryImpl
+import com.krumin.tonguecoinsmanager.data.repository.FcmDraftRepository
 import com.krumin.tonguecoinsmanager.data.repository.FcmRepositoryImpl
 import com.krumin.tonguecoinsmanager.data.repository.GcsPhotoRepository
 import com.krumin.tonguecoinsmanager.data.service.GeminiCategoryGenerator
@@ -39,6 +40,7 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 import org.threeten.bp.Duration
+import java.util.concurrent.TimeUnit
 
 val appModule = module {
     // Database
@@ -56,7 +58,13 @@ val appModule = module {
     single { get<AppDatabase>().testDeviceDao() }
 
     // Network
-    single { OkHttpClient() }
+    single {
+        OkHttpClient.Builder()
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .build()
+    }
 
     // Firestore - Centralized & Resilient
     single<Firestore> {
@@ -129,11 +137,12 @@ val appModule = module {
     single { ScheduleFcmNotificationUseCase(get()) }
     single { GenerateFcmNotificationUseCase(get()) }
     single { ManageTestDevicesUseCase(get()) }
+    single { FcmDraftRepository(androidContext()) }
 
     // ViewModels
     viewModel { MainViewModel(get()) }
     viewModel { BroadcastViewModel(get()) }
-    viewModel { FcmViewModel(get(), get(), get(), get()) }
+    viewModel { FcmViewModel(get(), get(), get(), get(), get(), get()) }
     viewModel {
         DailyRiddleViewModel(
             get(),
