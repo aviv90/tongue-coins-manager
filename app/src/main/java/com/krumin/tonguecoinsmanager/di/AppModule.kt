@@ -10,17 +10,25 @@ import com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig
 import com.krumin.tonguecoinsmanager.data.local.AppDatabase
 import com.krumin.tonguecoinsmanager.data.repository.BroadcastRepositoryImpl
 import com.krumin.tonguecoinsmanager.data.repository.DailyRiddleRepositoryImpl
+import com.krumin.tonguecoinsmanager.data.repository.FcmRepositoryImpl
 import com.krumin.tonguecoinsmanager.data.repository.GcsPhotoRepository
 import com.krumin.tonguecoinsmanager.data.service.GeminiCategoryGenerator
+import com.krumin.tonguecoinsmanager.data.service.GeminiFcmGenerator
 import com.krumin.tonguecoinsmanager.data.service.GeminiImageEditor
 import com.krumin.tonguecoinsmanager.domain.repository.BroadcastRepository
 import com.krumin.tonguecoinsmanager.domain.repository.DailyRiddleRepository
+import com.krumin.tonguecoinsmanager.domain.repository.FcmRepository
 import com.krumin.tonguecoinsmanager.domain.repository.PhotoRepository
 import com.krumin.tonguecoinsmanager.domain.service.CategoryGenerator
+import com.krumin.tonguecoinsmanager.domain.service.FcmGenerator
 import com.krumin.tonguecoinsmanager.domain.service.ImageEditor
 import com.krumin.tonguecoinsmanager.domain.usecase.dailyriddle.GetDailyRiddleUseCase
 import com.krumin.tonguecoinsmanager.domain.usecase.dailyriddle.ResetDailyRiddleUseCase
 import com.krumin.tonguecoinsmanager.domain.usecase.dailyriddle.SetDailyRiddleUseCase
+import com.krumin.tonguecoinsmanager.domain.usecase.fcm.GenerateFcmNotificationUseCase
+import com.krumin.tonguecoinsmanager.domain.usecase.fcm.ManageTestDevicesUseCase
+import com.krumin.tonguecoinsmanager.domain.usecase.fcm.ScheduleFcmNotificationUseCase
+import com.krumin.tonguecoinsmanager.domain.usecase.fcm.SendFcmNotificationUseCase
 import com.krumin.tonguecoinsmanager.ui.viewmodel.BroadcastViewModel
 import com.krumin.tonguecoinsmanager.ui.viewmodel.DailyRiddleViewModel
 import com.krumin.tonguecoinsmanager.ui.viewmodel.EditPhotoViewModel
@@ -78,8 +86,8 @@ val appModule = module {
         )
     }
 
-    single<com.krumin.tonguecoinsmanager.domain.repository.FcmRepository> {
-        com.krumin.tonguecoinsmanager.data.repository.FcmRepositoryImpl(
+    single<FcmRepository> {
+        FcmRepositoryImpl(
             context = androidContext(),
             firestore = get(),
             testDeviceDao = get(),
@@ -92,8 +100,8 @@ val appModule = module {
         GeminiCategoryGenerator(androidContext(), BuildConfig.GEMINI_API_KEY)
     }
 
-    single<com.krumin.tonguecoinsmanager.domain.service.FcmGenerator> {
-        com.krumin.tonguecoinsmanager.data.service.GeminiFcmGenerator(BuildConfig.GEMINI_API_KEY)
+    single<FcmGenerator> {
+        GeminiFcmGenerator(BuildConfig.GEMINI_API_KEY)
     }
 
     single<ImageEditor> {
@@ -117,10 +125,10 @@ val appModule = module {
     single { ResetDailyRiddleUseCase(get()) }
 
     // FCM Use Cases
-    single { com.krumin.tonguecoinsmanager.domain.usecase.fcm.SendFcmNotificationUseCase(get()) }
-    single { com.krumin.tonguecoinsmanager.domain.usecase.fcm.ScheduleFcmNotificationUseCase(get()) }
-    single { com.krumin.tonguecoinsmanager.domain.usecase.fcm.GenerateFcmNotificationUseCase(get()) }
-    single { com.krumin.tonguecoinsmanager.domain.usecase.fcm.ManageTestDevicesUseCase(get()) }
+    single { SendFcmNotificationUseCase(get()) }
+    single { ScheduleFcmNotificationUseCase(get()) }
+    single { GenerateFcmNotificationUseCase(get()) }
+    single { ManageTestDevicesUseCase(get()) }
 
     // ViewModels
     viewModel { MainViewModel(get()) }

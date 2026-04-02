@@ -62,6 +62,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import coil.compose.AsyncImage
 import com.krumin.tonguecoinsmanager.R
+import com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig
 import com.krumin.tonguecoinsmanager.domain.model.Platform
 import com.krumin.tonguecoinsmanager.ui.viewmodel.EditAction
 import com.krumin.tonguecoinsmanager.ui.viewmodel.EditPhotoViewModel
@@ -119,7 +120,7 @@ fun EditPhotoScreen(
         state.generatedCategories?.let { genCats ->
             if (genCats.isNotEmpty()) {
                 categories =
-                    genCats.joinToString(com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Gcs.SEPARATOR_COMMA)
+                    genCats.joinToString(AppConfig.Gcs.SEPARATOR_COMMA)
                 viewModel.handleAction(EditAction.ClearGeneratedCategories)
                 snackbarHostState.showSnackbar(successMessage)
             }

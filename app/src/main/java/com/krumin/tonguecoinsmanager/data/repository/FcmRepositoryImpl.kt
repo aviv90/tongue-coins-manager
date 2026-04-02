@@ -42,9 +42,11 @@ class FcmRepositoryImpl(
     private val json = Json { ignoreUnknownKeys = true }
 
     private suspend fun getProjectId(): String = withContext(Dispatchers.IO) {
-        val stream = context.assets.open(AppConfig.Gcs.DEFAULT_KEY_FILE)
-        val creds = com.google.auth.oauth2.ServiceAccountCredentials.fromStream(stream)
-        creds.projectId
+        retryOnTransient {
+            val stream = context.assets.open(AppConfig.Gcs.DEFAULT_KEY_FILE)
+            val creds = com.google.auth.oauth2.ServiceAccountCredentials.fromStream(stream)
+            creds.projectId
+        }
     }
 
     override suspend fun sendNotification(
@@ -83,11 +85,45 @@ class FcmRepositoryImpl(
     }
 
     private suspend fun getAccessToken(): String = withContext(Dispatchers.IO) {
-        val stream = context.assets.open(AppConfig.Gcs.DEFAULT_KEY_FILE)
-        val credentials = GoogleCredentials.fromStream(stream)
-            .createScoped(listOf(AppConfig.Fcm.SCOPE))
-        credentials.refreshIfExpired()
-        credentials.accessToken.tokenValue
+        retryOnTransient {
+            val stream = context.assets.open(AppConfig.Gcs.DEFAULT_KEY_FILE)
+            val credentials = GoogleCredentials.fromStream(stream)
+                .createScoped(listOf(AppConfig.Fcm.SCOPE))
+            credentials.refreshIfExpired()
+            credentials.accessToken.tokenValue
+        }
+    }
+
+    private suspend fun <T> retryOnTransient(
+        maxRetries: Int = 3,
+        initialDelay: Long = 1000L,
+        call: suspend () -> T
+    ): T {
+        var currentDelay = initialDelay
+        var lastException: Throwable? = null
+
+        repeat(maxRetries + 1) { attempt ->
+            try {
+                return call()
+            } catch (e: Exception) {
+                lastException = e
+                if (isTransient(e) && attempt < maxRetries) {
+                    kotlinx.coroutines.delay(currentDelay)
+                    currentDelay = (currentDelay * 2.0).toLong()
+                } else {
+                    throw e
+                }
+            }
+        }
+        throw lastException ?: IllegalStateException("Retry failed")
+    }
+
+    private fun isTransient(e: Throwable): Boolean {
+        val message = e.message ?: ""
+        return message.contains("Unable to resolve host", ignoreCase = true) ||
+                message.contains("Timeout", ignoreCase = true) ||
+                message.contains("Connection reset", ignoreCase = true) ||
+                e is IOException
     }
 
     override suspend fun scheduleNotification(notification: FcmNotification): Result<Unit> =

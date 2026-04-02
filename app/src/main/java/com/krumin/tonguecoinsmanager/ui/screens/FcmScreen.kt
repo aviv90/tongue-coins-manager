@@ -70,7 +70,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -89,6 +88,7 @@ import com.krumin.tonguecoinsmanager.ui.viewmodel.FcmAction
 import com.krumin.tonguecoinsmanager.ui.viewmodel.FcmState
 import com.krumin.tonguecoinsmanager.ui.viewmodel.FcmViewModel
 import org.koin.androidx.compose.koinViewModel
+import java.util.Calendar
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -104,12 +104,12 @@ fun FcmScreen(
     var showManageDevicesDialog by remember { mutableStateOf(false) }
     var showAddDeviceDialog by remember { mutableStateOf(false) }
     var showSelectDeviceDialog by remember { mutableStateOf(false) }
-    var showConfirmSendDialog by remember { mutableStateOf(false) }
     var showConfirmClearDialog by remember { mutableStateOf(false) }
+    var pendingTargetToConfirm by remember { mutableStateOf<NotificationTarget?>(null) }
     var advancedExpanded by remember { mutableStateOf(false) }
 
     // Date/Time Pickers
-    val calendar = remember { java.util.Calendar.getInstance() }
+    val calendar = remember { Calendar.getInstance() }
     val datePickerDialog = remember {
         DatePickerDialog(
             context,
@@ -191,16 +191,12 @@ fun FcmScreen(
                             val layoutDirection = LocalLayoutDirection.current
                             IconButton(onClick = {
                                 if (state.title.isNotBlank() && state.body.isNotBlank()) {
-                                    showConfirmSendDialog = true
+                                    pendingTargetToConfirm = state.target
                                 }
                             }) {
                                 Icon(
                                     Icons.AutoMirrored.Filled.Send,
                                     contentDescription = null,
-                                    modifier = Modifier.graphicsLayer {
-                                        rotationY =
-                                            if (layoutDirection == LayoutDirection.Rtl) AppConfig.Ui.FLIP_ROTATION else 0f
-                                    },
                                     tint = MaterialTheme.colorScheme.primary
                                 )
                             }
@@ -439,31 +435,34 @@ fun FcmScreen(
             }
         }
 
-        // Dialogs
-        if (showConfirmSendDialog) {
+        // Unified Send Confirmation Dialog
+        if (pendingTargetToConfirm != null) {
+            val isTestSend = pendingTargetToConfirm is NotificationTarget.Token
             AlertDialog(
-                onDismissRequest = { showConfirmSendDialog = false },
+                onDismissRequest = { pendingTargetToConfirm = null },
                 title = {
                     Text(
                         if (state.isScheduled) stringResource(R.string.fcm_send_scheduled_button)
+                        else if (isTestSend) stringResource(R.string.fcm_confirm_send_token_title)
                         else stringResource(R.string.fcm_confirm_send_title)
                     )
                 },
-                text = { Text(stringResource(R.string.fcm_confirm_send_message)) },
+                text = {
+                    Text(
+                        if (isTestSend) stringResource(R.string.fcm_confirm_send_message)
+                        else stringResource(R.string.fcm_confirm_send_message)
+                    )
+                },
                 confirmButton = {
                     TextButton(onClick = {
-                        showConfirmSendDialog = false
-                        viewModel.handleAction(FcmAction.SendNotification())
+                        viewModel.handleAction(FcmAction.SendNotification(pendingTargetToConfirm!!))
+                        pendingTargetToConfirm = null
                     }) {
-                        Text(
-                            stringResource(R.string.broadcast_dialog_button_confirm),
-                            color = if (state.isScheduled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Text(stringResource(R.string.broadcast_dialog_button_confirm))
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showConfirmSendDialog = false }) {
+                    TextButton(onClick = { pendingTargetToConfirm = null }) {
                         Text(stringResource(R.string.broadcast_dialog_button_cancel))
                     }
                 }
@@ -517,13 +516,7 @@ fun FcmScreen(
             SelectDeviceDialog(
                 devices = state.testDevices,
                 onSelect = { device ->
-                    viewModel.handleAction(
-                        FcmAction.SendNotification(
-                            NotificationTarget.Token(
-                                device.token
-                            )
-                        )
-                    )
+                    pendingTargetToConfirm = NotificationTarget.Token(device.token)
                     showSelectDeviceDialog = false
                 },
                 onDismiss = { showSelectDeviceDialog = false }

@@ -30,3 +30,11 @@ Thumb.db
 desktop.ini
 # Firebase
 google-services.json
+firebase-debug.log
+firebase-had-error.log
+
+# Firebase Functions
+functions/node_modules/
+functions/lib/
+functions/npm-debug.log
+functions/firebase-debug.log

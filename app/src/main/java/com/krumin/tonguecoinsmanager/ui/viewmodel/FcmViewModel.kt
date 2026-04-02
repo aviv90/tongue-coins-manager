@@ -4,9 +4,16 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.krumin.tonguecoinsmanager.R
+import com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig
+import com.krumin.tonguecoinsmanager.domain.model.FcmNotification
 import com.krumin.tonguecoinsmanager.domain.model.FcmPriority
 import com.krumin.tonguecoinsmanager.domain.model.NotificationTarget
+import com.krumin.tonguecoinsmanager.domain.model.Platform
 import com.krumin.tonguecoinsmanager.domain.model.TestDevice
+import com.krumin.tonguecoinsmanager.domain.usecase.fcm.GenerateFcmNotificationUseCase
+import com.krumin.tonguecoinsmanager.domain.usecase.fcm.ManageTestDevicesUseCase
+import com.krumin.tonguecoinsmanager.domain.usecase.fcm.ScheduleFcmNotificationUseCase
+import com.krumin.tonguecoinsmanager.domain.usecase.fcm.SendFcmNotificationUseCase
 import com.krumin.tonguecoinsmanager.util.UiText
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,7 +29,7 @@ data class FcmState(
     val imageUrl: String? = null,
     val dataPayload: Map<String, String> = emptyMap(),
     val target: NotificationTarget = NotificationTarget.Topic("all"),
-    val selectedPlatforms: Set<com.krumin.tonguecoinsmanager.domain.model.Platform> = emptySet(),
+    val selectedPlatforms: Set<Platform> = emptySet(),
     val testDevices: List<TestDevice> = emptyList(),
     val isLoading: Boolean = false,
     val error: UiText? = null,
@@ -35,18 +42,18 @@ data class FcmState(
 
     // Advanced Fields
     val priority: FcmPriority = FcmPriority.HIGH,
-    val androidChannelId: String? = com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Fcm.DEFAULT_CHANNEL_ID,
+    val androidChannelId: String? = AppConfig.Fcm.DEFAULT_CHANNEL_ID,
     val soundEnabled: Boolean = true,
     val badgeCount: Int? = null,
 
     // Scheduling
     val isScheduled: Boolean = false,
     val scheduledDate: String = SimpleDateFormat(
-        com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Fcm.DATE_FORMAT,
+        AppConfig.Fcm.DATE_FORMAT,
         Locale.US
     ).format(Date()),
     val scheduledTime: String = SimpleDateFormat(
-        com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Fcm.TIME_FORMAT,
+        AppConfig.Fcm.TIME_FORMAT,
         Locale.US
     ).format(Date())
 )
@@ -58,7 +65,7 @@ sealed interface FcmAction {
     data class AddDataPair(val key: String, val value: String) : FcmAction
     data class RemoveDataPair(val key: String) : FcmAction
     data class UpdateTarget(val target: NotificationTarget) : FcmAction
-    data class UpdateSelectedPlatforms(val platforms: Set<com.krumin.tonguecoinsmanager.domain.model.Platform>) :
+    data class UpdateSelectedPlatforms(val platforms: Set<Platform>) :
         FcmAction
 
     data class SendNotification(val overrideTarget: NotificationTarget? = null) : FcmAction
@@ -88,10 +95,10 @@ sealed interface FcmAction {
 }
 
 class FcmViewModel(
-    private val sendFcmUseCase: com.krumin.tonguecoinsmanager.domain.usecase.fcm.SendFcmNotificationUseCase,
-    private val scheduleFcmUseCase: com.krumin.tonguecoinsmanager.domain.usecase.fcm.ScheduleFcmNotificationUseCase,
-    private val generateFcmUseCase: com.krumin.tonguecoinsmanager.domain.usecase.fcm.GenerateFcmNotificationUseCase,
-    private val manageTestDevicesUseCase: com.krumin.tonguecoinsmanager.domain.usecase.fcm.ManageTestDevicesUseCase
+    private val sendFcmUseCase: SendFcmNotificationUseCase,
+    private val scheduleFcmUseCase: ScheduleFcmNotificationUseCase,
+    private val generateFcmUseCase: GenerateFcmNotificationUseCase,
+    private val manageTestDevicesUseCase: ManageTestDevicesUseCase
 ) : ViewModel() {
 
     companion object {
@@ -138,7 +145,19 @@ class FcmViewModel(
             is FcmAction.AddTestDevice -> addTestDevice(action.name, action.token)
             is FcmAction.RemoveTestDevice -> removeTestDevice(action.device)
             FcmAction.ClearStatus -> _state.update { it.copy(error = null, success = null) }
-            FcmAction.ClearForm -> _state.update { FcmState(testDevices = it.testDevices) }
+            FcmAction.ClearForm -> _state.update {
+                FcmState(
+                    testDevices = it.testDevices,
+                    scheduledDate = SimpleDateFormat(
+                        AppConfig.Fcm.DATE_FORMAT,
+                        Locale.US
+                    ).format(Date()),
+                    scheduledTime = SimpleDateFormat(
+                        AppConfig.Fcm.TIME_FORMAT,
+                        Locale.US
+                    ).format(Date())
+                )
+            }
         }
     }
 
@@ -174,7 +193,7 @@ class FcmViewModel(
             val currentState = _state.value
             _state.update { it.copy(isLoading = true, error = null, success = null) }
 
-            val notification = com.krumin.tonguecoinsmanager.domain.model.FcmNotification(
+            val notification = FcmNotification(
                 title = currentState.title,
                 body = currentState.body,
                 imageUrl = currentState.imageUrl?.takeIf { it.isNotBlank() },
@@ -184,7 +203,13 @@ class FcmViewModel(
                 soundEnabled = currentState.soundEnabled,
                 badgeCount = currentState.badgeCount,
                 scheduledTime = if (currentState.isScheduled) {
-                    parseScheduledTime(currentState.scheduledDate, currentState.scheduledTime)
+                    val time =
+                        parseScheduledTime(currentState.scheduledDate, currentState.scheduledTime)
+                    Log.d(
+                        TAG,
+                        "Scheduling notification for timestamp: $time (${currentState.scheduledDate} ${currentState.scheduledTime})"
+                    )
+                    time
                 } else null,
                 target = overrideTarget
                     ?: if (currentState.selectedPlatforms.isNotEmpty() && currentState.target is NotificationTarget.Topic && currentState.target.name == "all") {
@@ -197,9 +222,16 @@ class FcmViewModel(
                     }
             )
 
+            Log.d(
+                TAG,
+                "Sending notification with target: ${notification.target} (Override: ${overrideTarget != null})"
+            )
+
             val result = if (currentState.isScheduled) {
+                Log.i(TAG, "Executing ScheduleFcmUseCase")
                 scheduleFcmUseCase(notification)
             } else {
+                Log.i(TAG, "Executing SendFcmUseCase (Immediate)")
                 sendFcmUseCase(notification, currentState.isDryRun)
             }
 
@@ -221,7 +253,7 @@ class FcmViewModel(
     private fun parseScheduledTime(datePart: String, timePart: String): Long? {
         return try {
             val format = SimpleDateFormat(
-                com.krumin.tonguecoinsmanager.data.infrastructure.AppConfig.Fcm.DATETIME_FORMAT,
+                AppConfig.Fcm.DATETIME_FORMAT,
                 Locale.US
             )
             val date = format.parse("$datePart $timePart")
